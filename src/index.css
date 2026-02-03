@@ -1,0 +1,166 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@layer base {
+  :root {
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
+
+    --card: 222 47% 14%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222 47% 14%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 199 89% 48%;
+    --primary-foreground: 222 47% 11%;
+
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+
+    --accent: 199 89% 48%;
+    --accent-foreground: 222 47% 11%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+
+    --success: 142 76% 36%;
+    --success-foreground: 210 40% 98%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 222 47% 11%;
+
+    --border: 217 33% 22%;
+    --input: 217 33% 22%;
+    --ring: 199 89% 48%;
+
+    --radius: 0.75rem;
+
+    --point-1: 0 84% 60%;
+    --point-2: 142 76% 36%;
+    --point-3: 199 89% 48%;
+    --point-4: 280 68% 60%;
+
+    --sidebar-background: 222 47% 9%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 199 89% 48%;
+    --sidebar-primary-foreground: 222 47% 11%;
+    --sidebar-accent: 217 33% 17%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217 33% 22%;
+    --sidebar-ring: 199 89% 48%;
+  }
+
+  .dark {
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
+    --card: 222 47% 14%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222 47% 14%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 199 89% 48%;
+    --primary-foreground: 222 47% 11%;
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 199 89% 48%;
+    --accent-foreground: 222 47% 11%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217 33% 22%;
+    --input: 217 33% 22%;
+    --ring: 199 89% 48%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+}
+
+@layer components {
+  .glass-panel {
+    @apply bg-card/80 backdrop-blur-xl border border-border/50 shadow-xl;
+  }
+
+  .point-marker {
+    @apply absolute w-6 h-6 rounded-full border-2 cursor-pointer transform -translate-x-1/2 -translate-y-1/2 transition-all duration-200 hover:scale-125;
+  }
+
+  .point-1 {
+    @apply bg-destructive/20 border-destructive text-destructive;
+  }
+
+  .point-2 {
+    @apply border-[hsl(142,76%,36%)] text-[hsl(142,76%,36%)];
+    background: hsl(142 76% 36% / 0.2);
+  }
+
+  .point-3 {
+    @apply bg-primary/20 border-primary text-primary;
+  }
+
+  .point-4 {
+    @apply border-[hsl(280,68%,60%)] text-[hsl(280,68%,60%)];
+    background: hsl(280 68% 60% / 0.2);
+  }
+
+  .input-group {
+    @apply flex items-center gap-2 p-3 rounded-lg bg-secondary/50 border border-border/50 transition-all duration-200;
+  }
+
+  .input-group:hover {
+    @apply border-primary/50;
+  }
+
+  .input-group.active {
+    @apply border-primary bg-primary/10;
+  }
+
+  .mode-tab {
+    @apply flex-1 py-3 px-4 text-sm font-medium rounded-lg transition-all duration-200;
+  }
+
+  .mode-tab.active {
+    @apply bg-primary text-primary-foreground;
+  }
+
+  .mode-tab:not(.active) {
+    @apply bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary;
+  }
+
+  .canvas-container {
+    @apply relative bg-secondary/30 rounded-xl border-2 border-dashed border-border/50 overflow-hidden;
+  }
+
+  .canvas-container.has-image {
+    @apply border-solid border-border;
+  }
+
+  .download-btn {
+    @apply w-full py-4 px-6 bg-gradient-to-r from-primary to-accent text-primary-foreground font-semibold rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-primary/25 hover:-translate-y-0.5 active:translate-y-0;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent;
+  }
+
+  .animate-pulse-slow {
+    animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+}
