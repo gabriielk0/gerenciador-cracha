@@ -2,15 +2,13 @@ import React, { useState } from 'react';
 import { InputMode, BadgeData } from '@/types/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { User, Users, PenLine, ArrowRight, Check, AlertCircle, Trash2 } from 'lucide-react';
+import { PenLine, Users, ArrowRight, Check, Plus, Trash2 } from 'lucide-react';
 
 interface DataInputProps {
   mode: InputMode;
   onModeChange: (mode: InputMode) => void;
   onSingleSubmit: (data: BadgeData) => void;
   onBulkSubmit: (data: BadgeData[]) => void;
-  onClearBulk: () => void;
-  bulkCount: number;
   isReady: boolean;
 }
 
@@ -19,29 +17,30 @@ export const DataInput: React.FC<DataInputProps> = ({
   onModeChange,
   onSingleSubmit,
   onBulkSubmit,
-  onClearBulk,
-  bulkCount,
   isReady,
 }) => {
+  // --- Estados do Modo Manual ---
   const [name, setName] = useState('');
   const [team, setTeam] = useState('');
-  
+
+  // --- Estados do Modo em Massa (Lista) ---
   const [currentBulkName, setCurrentBulkName] = useState('');
-  const [currentBulkTeam, setCurrentBulkTeam] = useState('')
-  const [nameList, setNamesList] = useState<string[]>([]);
+  const [currentBulkTeam, setCurrentBulkTeam] = useState('');
+  const [namesList, setNamesList] = useState<BadgeData[]>([]); // Variável que estava faltando!
 
   const handleAddToList = () => {
-    if(currentBulkName.trim() && currentBulkTeam.trim()) {
-      setNamesList([...nameList, {
-        name: currentBulkName.trim(),
-        team: currentBulkTeam.trim()
+    if (currentBulkName.trim() && currentBulkTeam.trim()) {
+      setNamesList([...namesList, { 
+        name: currentBulkName.trim(), 
+        team: currentBulkTeam.trim() 
       }]);
-      setCurrentBulkName('');
+      setCurrentBulkName(''); // Limpa apenas o nome para agilizar
+      // setCurrentBulkTeam(''); // Limpa o time para agilizar
     }
-  }
+  };
 
-  const handleRemoveFromList = (index: number) => {
-    setNamesList(nameList.filter((_, i) => i !== index));
+  const removeFromList = (index: number) => {
+    setNamesList(namesList.filter((_, i) => i !== index));
   };
 
   return (
@@ -107,10 +106,7 @@ export const DataInput: React.FC<DataInputProps> = ({
               <Input
                 placeholder="Equipe"
                 value={currentBulkTeam}
-                onChange={(e) => currentBulkTeam === '' && setTeam(team)} // helper
-                onBlur={(e) => setCurrentBulkTeam(e.target.value)}
-                defaultValue={team} // Sugere a equipe do manual se houver
-                onChangeCapture={(e: any) => setCurrentBulkTeam(e.target.value)}
+                onChange={(e) => setCurrentBulkTeam(e.target.value)}
                 disabled={!isReady}
               />
             </div>

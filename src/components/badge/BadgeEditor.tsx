@@ -1,7 +1,6 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { BadgePoints, PointKey, InputMode, BadgeData } from '@/types/badge';
-import { BadgeCanvas } from './BadgeCanvas';
-import { BulkBadgeCanvas, BulkBadgeCanvasRef } from './BulkBadgeCanvas';
+import { BadgeCanvas, BadgeCanvasRef } from './BadgeCanvas';
 import { PointSelector } from './PointSelector';
 import { DataInput } from './DataInput';
 import { Download, RotateCcw, Sparkles } from 'lucide-react';
@@ -33,7 +32,7 @@ export const BadgeEditor: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
 
-  const canvasRefs = useRef<Map<number, BulkBadgeCanvasRef>>(new Map());
+  const canvasRefs = useRef<Map<number, BadgeCanvasRef>>(new Map());
   const allPointsSet = Object.values(points).every((p) => p !== null);
 
   const handlePointClick = (x: number, y: number) => {
@@ -228,13 +227,14 @@ export const BadgeEditor: React.FC = () => {
                     <p className="text-[10px] font-mono mb-2 text-muted-foreground">
                       #{i + 1} - {data.name}
                     </p>
-                    <BulkBadgeCanvas
+                    <BadgeCanvas
                       ref={(el) => {
                         if (el) canvasRefs.current.set(i, el);
                       }}
                       image={image!}
                       points={points}
                       badgeData={data}
+                      showPreview={true}
                     />
                   </div>
                 ))}
