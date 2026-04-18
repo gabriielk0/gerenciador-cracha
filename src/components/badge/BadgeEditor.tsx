@@ -4,7 +4,7 @@ import { BadgeCanvas } from './BadgeCanvas';
 import { BulkBadgeCanvas, BulkBadgeCanvasRef } from './BulkBadgeCanvas';
 import { PointSelector } from './PointSelector';
 import { DataInput } from './DataInput';
-import { Download, RotateCcw, Sparkles, CheckCircle2 } from 'lucide-react';
+import { Download, RotateCcw, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
@@ -13,9 +13,7 @@ interface BadgeEditorProps {
   hideHeader?: boolean;
 }
 
-export const BadgeEditor: React.FC<BadgeEditorProps> = ({
-  hideHeader = false,
-}) => {
+export const BadgeEditor: React.FC = () => {
   const [image, setImage] = useState<string | null>(null);
   const [points, setPoints] = useState<BadgePoints>({
     topRight: null,
@@ -32,14 +30,14 @@ export const BadgeEditor: React.FC<BadgeEditorProps> = ({
   const [singleData, setSingleData] = useState<BadgeData | null>(null);
   const [bulkData, setBulkData] = useState<BadgeData[]>([]);
   const [showPreview, setShowPreview] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
 
   const canvasRefs = useRef<Map<number, BulkBadgeCanvasRef>>(new Map());
-  const allPointsSet = Object.values(points).every((p) => p != null);
+  const allPointsSet = Object.values(points).every((p) => p !== null);
 
   const handlePointClick = (x: number, y: number) => {
     if (!activePoint) return;
-
     setPoints((prev) => ({
       ...prev,
       [activePoint]: { x, y },
@@ -62,8 +60,9 @@ export const BadgeEditor: React.FC<BadgeEditorProps> = ({
   };
 
   const handleBulkSubmit = (data: BadgeData[]) => {
+    setBulkData(data);
     setSingleData(null);
-    setShowPreview(false);
+    setShowPreview(true);
   };
 
   const handleDownloadSingle = () => {
@@ -83,15 +82,12 @@ export const BadgeEditor: React.FC<BadgeEditorProps> = ({
     const zip = new JSZip();
     await new Promise((resolve) => setTimeout(resolve, 500));
 
-    bulkData.forEach((badge, index) => {
+    bulkData.forEach((_, index) => {
       const canvasRef = canvasRefs.current.get(index);
-      if (canvasRef) {
-        const dataUrl = canvasRef.getDataURL();
-        if (dataUrl) {
-          const base64Data = dataUrl.split(',')[1];
-          const fileName = `cracha-${badge.name.replace(/\s+/g, '-').toLowerCase()}-${index + 1}.png`;
-          zip.file(fileName, base64Data, { base64: true });
-        }
+      const dataUrl = canvasRef?.getDataURL();
+      if (dataUrl) {
+        const base64Data = dataUrl.split(',')[1];
+        zip.file(`cracha-${index + 1}.png`, base64Data, { base64: true });
       }
     });
 
@@ -114,9 +110,8 @@ export const BadgeEditor: React.FC<BadgeEditorProps> = ({
   const handleReset = () => {
     setShowPreview(false);
     setSingleData(null);
-    setBulkData([])
+    setBulkData([]);
   };
-
 
   const handleFullReset = () => {
     setImage(null);
@@ -135,106 +130,85 @@ export const BadgeEditor: React.FC<BadgeEditorProps> = ({
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
-        <header className="mb-8 text-center md:text-left">
-          <div className="flex items-center justify-center md:justify-start gap-3 mb-2">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <h1 className="text-2xl md:text-3xl font-bold text-foreground">
-              Gerador de Crachás
-            </h1>
+        <header className="mb-8 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-primary-foreground">
+            <Sparkles />
           </div>
-          <p className="text-muted-foreground">
-            Carregue seu modelo, defina a área de preenchimento e gere crachás personalizados
-          </p>
+          <div>
+            <h1 className="text-2xl font-bold">Gerador de Crachás</h1>
+            <p className="text-muted-foreground text-sm">
+              Unificado: Manual e Lista
+            </p>
+          </div>
         </header>
 
         <div className="grid lg:grid-cols-[320px_1fr] gap-6">
           <aside className="space-y-6">
-            <div className="glass-panel rounded-2xl p-5">
-              <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-                <span className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary">
-                  1
-                </span>
-                Definir Pontos
-              </h2>
+            <div className="glass-panel p-5 rounded-2xl border">
               <PointSelector
                 points={points}
                 activePoint={activePoint}
-                onSelectPoint={handleSelectPoint}
+                onSelectPoint={(k) =>
+                  setActivePoint(activePoint === k ? null : k)
+                }
                 hasImage={!!image}
               />
             </div>
 
-            <div className="glass-panel rounded-2xl p-5">
-              <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-                <span className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary">
-                  2
-                </span>
-                Inserir Dados
-              </h2>
+            <div className="glass-panel p-5 rounded-2xl border">
               <DataInput
                 mode={inputMode}
-                onModeChange={handleModeChange}
-                onSingleSubmit={handleSingleSubmit}
-                onBulkSubmit={handleBulkSubmit}
-                isReady={allPointsSet} onClearBulk={function (): void {
-                  throw new Error('Function not implemented.');
-                } } bulkCount={0}              />
+                onModeChange={(m) => {
+                  setInputMode(m);
+                  setShowPreview(false);
+                }}
+                isReady={allPointsSet}
+                onSingleSubmit={(d) => {
+                  setSingleData(d);
+                  setShowPreview(true);
+                }}
+                onBulkSubmit={(d) => {
+                  setBulkData(d);
+                  setShowPreview(true);
+                }}
+              />
             </div>
 
             {showPreview && (
-              <div className="space-y-3 animate-scale-in">
-                {inputMode === 'manual' && singleData && (
-                  <button onClick={handleDownloadSingle} className="download-btn flex items-center justify-center gap-2 w-full">
-                    <Download className="w-5 h-5" />
-                    Baixar Crachá
-                  </button>
-                )}
-
-                {inputMode === 'bulk' && bulkData.length > 0 && (
-                  <button onClick={handleDownloadBulk} disabled={isDownloading} className="download-btn flex items-center justify-center gap-2 w-full disabled:opacity-50">
-                    <Download className="w-5 h-5" />
-                    {isDownloading ? 'Gerando ZIP...' : `Baixar Todos (${bulkData.length})`}
-                  </button>
-                )}
-                
-                <Button variant="outline" onClick={handleReset} className="w-full border-border/50 hover:bg-secondary">
-                  <RotateCcw className="w-4 h-4 mr-2" />
-                  Nova Geração
+              <div className="space-y-2">
+                <Button
+                  className="w-full bg-green-600 hover:bg-green-700"
+                  onClick={
+                    inputMode === 'manual' ? () => {} : handleDownloadBulk
+                  }
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  {loading ? 'Processando...' : 'Baixar Resultados'}
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="w-full"
+                  onClick={() => setShowPreview(false)}
+                >
+                  <RotateCcw className="w-4 h-4 mr-2" /> Editar Dados
                 </Button>
               </div>
             )}
 
             {image && (
-              <Button variant="ghost" onClick={handleFullReset} className="w-full text-muted-foreground hover:text-destructive">
-                Recomeçar do Zero
+              <Button
+                variant="link"
+                className="w-full text-destructive text-xs"
+                onClick={handleFullReset}
+              >
+                Remover Imagem e Resetar tudo
               </Button>
             )}
           </aside>
 
-          <main className="glass-panel rounded-2xl p-5">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-foreground">
-                {!showPreview ? 'Modelo do Crachá' : inputMode === 'manual' ? 'Prévia do Crachá' : 'Prévia dos Crachás'}
-              </h2>
-              {showPreview && inputMode === 'manual' && singleData && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <span className="px-2 py-1 rounded bg-success/20 text-success">{singleData.name}</span>
-                  <span className="text-border">|</span>
-                  <span>{singleData.team}</span>
-                </div>
-              )}
-              {showPreview && inputMode === 'bulk' && bulkData.length > 0 && (
-                <div className="flex items-center gap-2 text-sm text-success">
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span>{bulkData.length} crachás gerados</span>
-                </div>
-              )}
-            </div>
-
-            {/* Alterna dinamicamente a área principal */}
-            {!showPreview || inputMode === 'manual' ? (
+          <main className="glass-panel p-5 rounded-2xl border min-h-[500px] bg-secondary/10">
+            {/* Se não for prévia bulk, mostra o canvas interativo normal */}
+            {!(showPreview && inputMode === 'bulk') ? (
               <BadgeCanvas
                 image={image}
                 points={points}
@@ -245,27 +219,23 @@ export const BadgeEditor: React.FC<BadgeEditorProps> = ({
                 showPreview={showPreview && inputMode === 'manual'}
               />
             ) : (
-              <div className="space-y-6 max-h-[70vh] overflow-y-auto pr-2">
-                {bulkData.map((badge, index) => (
-                  <div key={index} className="border border-border rounded-xl p-4 bg-secondary/20">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <span className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-xs font-bold text-primary-foreground">
-                          {index + 1}
-                        </span>
-                        <span className="font-medium text-foreground">{badge.name}</span>
-                        <span className="text-muted-foreground">|</span>
-                        <span className="text-sm text-muted-foreground">{badge.team}</span>
-                      </div>
-                    </div>
-                    <div className="flex justify-center">
-                      <BulkBadgeCanvas
-                        ref={(ref) => setCanvasRef(index, ref)}
-                        image={image!}
-                        points={points}
-                        badgeData={badge}
-                      />
-                    </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[700px] overflow-y-auto p-2">
+                {bulkData.map((data, i) => (
+                  <div
+                    key={i}
+                    className="bg-background border rounded-lg p-2 shadow-sm"
+                  >
+                    <p className="text-[10px] font-mono mb-2 text-muted-foreground">
+                      #{i + 1} - {data.name}
+                    </p>
+                    <BulkBadgeCanvas
+                      ref={(el) => {
+                        if (el) canvasRefs.current.set(i, el);
+                      }}
+                      image={image!}
+                      points={points}
+                      badgeData={data}
+                    />
                   </div>
                 ))}
               </div>
