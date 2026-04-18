@@ -1,7 +1,7 @@
-import { BadgeTabs } from '@/components/badge/BadgeTabs';
+import { BadgeEditor } from '@/components/badge/BadgeEditor';
 
 const Index = () => {
-  return <BadgeTabs />;
+  return <BadgeEditor />;
 };
 
 export default Index;

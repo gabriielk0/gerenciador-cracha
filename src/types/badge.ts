@@ -17,4 +17,4 @@ export interface BadgeData {
 
 export type PointKey = 'topRight' | 'topLeft' | 'bottomRight' | 'bottomLeft';
 
-export type InputMode = 'api' | 'manual';
+export type InputMode = 'manual' | 'bulk';

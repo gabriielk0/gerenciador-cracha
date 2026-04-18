@@ -3,19 +3,25 @@ import { InputMode, BadgeData } from '@/types/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { User, Users, Code, PenLine, ArrowRight, Check } from 'lucide-react';
+import { User, Users, PenLine, ArrowRight, Check, AlertCircle } from 'lucide-react';
 
 interface DataInputProps {
   mode: InputMode;
   onModeChange: (mode: InputMode) => void;
-  onDataSubmit: (data: BadgeData) => void;
+  onSingleSubmit: (data: BadgeData) => void;
+  onBulkSubmit: (data: BadgeData[]) => void;
+  onClearBulk: () => void;
+  bulkCount: number;
   isReady: boolean;
 }
 
 export const DataInput: React.FC<DataInputProps> = ({
   mode,
   onModeChange,
-  onDataSubmit,
+  onSingleSubmit,
+  onBulkSubmit,
+  onClearBulk,
+  bulkCount,
   isReady,
 }) => {
   const [name, setName] = useState('');
@@ -23,29 +29,53 @@ export const DataInput: React.FC<DataInputProps> = ({
   const [jsonInput, setJsonInput] = useState('');
   const [jsonError, setJsonError] = useState<string | null>(null);
 
+  const exampleJson = `[\n  { "name": "João Silva", "team": "Equipe Alpha" },\n  { "name": "Maria Santos", "team": "Equipe Beta" }\n]`;
+
   const handleManualSubmit = () => {
     if (name.trim() && team.trim()) {
-      onDataSubmit({ name: name.trim(), team: team.trim() });
+      onSingleSubmit({ name: name.trim(), team: team.trim() });
     }
   };
 
-  const handleJsonSubmit = () => {
+  const handleBulkSubmit = () => {
     try {
-      const data = JSON.parse(jsonInput);
-      if (data.name && data.team) {
-        onDataSubmit({ name: data.name, team: data.team });
-        setJsonError(null);
-      } else {
-        setJsonError('JSON deve conter "name" e "team"');
+      const parsed = JSON.parse(jsonInput);
+
+      if (!Array.isArray(parsed)) {
+        setJsonError('O JSON deve ser um array de objetos');
+        return;
       }
+
+      const validData: BadgeData[] = [];
+      for (let i = 0; i < parsed.length; i++) {
+        const item = parsed[i];
+        if (typeof item.name != 'string' || typeof item.team != 'string') {
+          setJsonError(`Item ${i + 1}: deve conter "name" e "team" como strings`);
+          return;
+        }
+
+        validData.push({
+          name: item.name.trim(),
+          team: item.team.trim(),
+        });
+      }
+
+      if (validData.length === 0) {
+        setJsonError('Adicione pelo menos um item ao JSON');
+        return;
+      }
+
+      onBulkSubmit(validData);
+      setJsonError(null);
     } catch {
-      setJsonError('JSON inválido');
+      setJsonError('JSON invÃ¡lido');
     }
   };
+
+  
 
   return (
     <div className="space-y-4">
-      {/* Mode Tabs */}
       <div className="flex gap-2 p-1 bg-secondary/30 rounded-xl">
         <button
           onClick={() => onModeChange('manual')}
@@ -55,11 +85,11 @@ export const DataInput: React.FC<DataInputProps> = ({
           Manual
         </button>
         <button
-          onClick={() => onModeChange('api')}
-          className={`mode-tab flex items-center justify-center gap-2 ${mode === 'api' ? 'active' : ''}`}
+          onClick={() => onModeChange('bulk')}
+          className={`mode-tab flex items-center justify-center gap-2 ${mode === 'bulk' ? 'active' : ''}`}
         >
-          <Code className="w-4 h-4" />
-          API
+          <Users className="w-4 h-4" />
+          Em massa
         </button>
       </div>
 
@@ -104,7 +134,7 @@ export const DataInput: React.FC<DataInputProps> = ({
             disabled={!isReady || !name.trim() || !team.trim()}
             className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
           >
-            <span>Gerar Prévia</span>
+            <span>Gerar PrÃ©via</span>
             <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
         </div>
@@ -114,29 +144,40 @@ export const DataInput: React.FC<DataInputProps> = ({
             <label className="text-sm font-medium text-muted-foreground">
               JSON de entrada
             </label>
+            <div className="text-xs text-muted-foreground">
+              <p className="mb-1">Formato esperado:</p>
+              <pre className="bg-secondary/50 p-2 rounded text-[10px] overflow-x-auto">
+                {exampleJson}
+              </pre>
+            </div>
             <Textarea
               value={jsonInput}
               onChange={(e) => {
                 setJsonInput(e.target.value);
                 setJsonError(null);
               }}
-              placeholder={'{\n  "name": "João Silva",\n  "team": "Desenvolvimento"\n}'}
+              placeholder='[{"name": "Nome", "team": "Equipe"}]'
               disabled={!isReady}
               className="bg-secondary/50 border-border/50 focus:border-primary min-h-[120px] font-mono text-sm"
             />
             {jsonError && (
-              <p className="text-sm text-destructive">{jsonError}</p>
+              <div className="flex items-start gap-2 text-sm text-destructive">
+                <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                <span>{jsonError}</span>
+              </div>
             )}
           </div>
 
-          <Button
-            onClick={handleJsonSubmit}
-            disabled={!isReady || !jsonInput.trim()}
-            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
-          >
-            <span>Processar JSON</span>
-            <Check className="w-4 h-4 ml-2" />
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={handleBulkSubmit}
+              disabled={!isReady || !jsonInput.trim()}
+              className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
+            >
+              <span>Gerar Lista</span>
+              <Check className="w-4 h-4 ml-2" />
+            </Button>
+          </div>
         </div>
       )}
     </div>
