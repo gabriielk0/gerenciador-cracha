@@ -96,23 +96,6 @@ export const BadgeEditor: React.FC = () => {
     setIsDownloading(false);
   };
 
-  const setCanvasRef = useCallback(
-    (index: number, ref: BulkBadgeCanvasRef | null) => {
-      if (ref) {
-        canvasRefs.current.set(index, ref);
-      } else {
-        canvasRefs.current.delete(index);
-      }
-    },
-    [],
-  );
-
-  const handleReset = () => {
-    setShowPreview(false);
-    setSingleData(null);
-    setBulkData([]);
-  };
-
   const handleFullReset = () => {
     setImage(null);
     setPoints({
@@ -242,47 +225,47 @@ export const BadgeEditor: React.FC = () => {
                 {/* Divide a exibição dependendo do modo atual */}
                 {inputMode === 'manual' ? (
                   <div className="flex gap-2">
-                    <Button 
-                      className="flex-1 bg-green-600 hover:bg-green-700 text-white" 
+                    <Button
+                      className="flex-1 bg-green-600 hover:bg-green-700 text-white"
                       onClick={handleDownloadSingle}
                       disabled={isDownloading}
                     >
-                      <Image className="w-4 h-4 mr-2" /> 
+                      <Image className="w-4 h-4 mr-2" />
                       {isDownloading ? 'Aguarde...' : 'Baixar PNG'}
                     </Button>
-                    <Button 
-                      className="flex-1 bg-red-600 hover:bg-red-700 text-white" 
+                    <Button
+                      className="flex-1 bg-red-600 hover:bg-red-700 text-white"
                       onClick={() => exportToPdf([singleData!])}
                       disabled={isDownloading}
                     >
-                      <FileText className="w-4 h-4 mr-2" /> 
+                      <FileText className="w-4 h-4 mr-2" />
                       {isDownloading ? 'Aguarde...' : 'Baixar PDF'}
                     </Button>
                   </div>
                 ) : (
                   <div className="flex gap-2">
-                    <Button 
-                      className="flex-1 bg-green-600 hover:bg-green-700 text-white" 
-                      onClick={handleDownloadBulk} 
+                    <Button
+                      className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                      onClick={handleDownloadBulk}
                       disabled={isDownloading}
                     >
-                      <Download className="w-4 h-4 mr-2" /> 
+                      <Download className="w-4 h-4 mr-2" />
                       {isDownloading ? 'Gerando...' : 'Baixar ZIP'}
                     </Button>
-                    <Button 
-                      className="flex-1 bg-red-600 hover:bg-red-700 text-white" 
-                      onClick={() => exportToPdf(bulkData)} 
+                    <Button
+                      className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                      onClick={() => exportToPdf(bulkData)}
                       disabled={isDownloading}
                     >
-                      <FileText className="w-4 h-4 mr-2" /> 
+                      <FileText className="w-4 h-4 mr-2" />
                       {isDownloading ? 'Gerando...' : 'PDF (A4)'}
                     </Button>
                   </div>
                 )}
-                
-                <Button 
-                  variant="ghost" 
-                  className="w-full" 
+
+                <Button
+                  variant="ghost"
+                  className="w-full"
                   onClick={() => setShowPreview(false)}
                   disabled={isDownloading}
                 >
