@@ -3,7 +3,7 @@ import { BadgePoints, PointKey, InputMode, BadgeData } from '@/types/badge';
 import { BadgeCanvas, BadgeCanvasRef } from './BadgeCanvas';
 import { PointSelector } from './PointSelector';
 import { DataInput } from './DataInput';
-import { Download, RotateCcw, Sparkles, FileText, Image } from 'lucide-react';
+import { Download, RotateCcw, IdCard, FileText, Image } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
@@ -178,13 +178,11 @@ export const BadgeEditor: React.FC = () => {
       <div className="max-w-7xl mx-auto">
         <header className="mb-8 flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-primary-foreground">
-            <Sparkles />
+            <IdCard />
           </div>
           <div>
             <h1 className="text-2xl font-bold">Gerador de Crachás</h1>
-            <p className="text-muted-foreground text-sm">
-              Unificado: Manual e Lista
-            </p>
+            <p className="text-muted-foreground text-sm">Manual e Lista</p>
           </div>
         </header>
 
