@@ -5,7 +5,6 @@ import { Upload, ImageIcon } from 'lucide-react';
 interface BadgeCanvasProps {
   image: string | null;
   points: BadgePoints;
-  // 👇 As funções e estados viraram opcionais (?) para o modo em massa
   activePoint?: PointKey | null;
   onImageUpload?: (image: string) => void;
   onPointClick?: (x: number, y: number) => void;
@@ -110,19 +109,29 @@ export const BadgeCanvas = forwardRef<BadgeCanvasRef, BadgeCanvasProps>(
 
           const initialNameSize = Math.max(24, Math.min(areaHeight * 0.50, areaWidth * 0.15));
           const nameFontSize = findOptimalFontSize(badgeData.name, maxTextWidth, initialNameSize, 14);
-          const teamFontSize = Math.max(12, nameFontSize * 0.55);
-
-          const totalTextHeight = nameFontSize + teamFontSize + 8;
-          const nameY = centerY - totalTextHeight / 2 + nameFontSize / 2;
-          const teamY = nameY + nameFontSize / 2 + 8 + teamFontSize / 2;
+          
+          // Lógica para desenhar o texto dependendo de ter Equipe ou não
+          const hasTeam = badgeData.team && badgeData.team.trim() !== '';
 
           ctx.fillStyle = '#000000';
           ctx.font = `bold ${nameFontSize}px Inter, sans-serif`;
-          ctx.fillText(badgeData.name, centerX, nameY);
 
-          ctx.fillStyle = 'rgba(59, 59, 59, 0.85)';
-          ctx.font = `${teamFontSize}px Inter, sans-serif`;
-          ctx.fillText(badgeData.team, centerX, teamY);
+          if (hasTeam) {
+            // Desenha nome + equipe deslocados para cima e para baixo
+            const teamFontSize = Math.max(12, nameFontSize * 0.55);
+            const totalTextHeight = nameFontSize + teamFontSize + 8;
+            const nameY = centerY - totalTextHeight / 2 + nameFontSize / 2;
+            const teamY = nameY + nameFontSize / 2 + 8 + teamFontSize / 2;
+
+            ctx.fillText(badgeData.name, centerX, nameY);
+
+            ctx.fillStyle = 'rgba(59, 59, 59, 0.85)';
+            ctx.font = `${teamFontSize}px Inter, sans-serif`;
+            ctx.fillText(badgeData.team, centerX, teamY);
+          } else {
+            // Se não houver equipe, centraliza o nome no meio exato do quadrado
+            ctx.fillText(badgeData.name, centerX, centerY);
+          }
         }
       };
       img.src = image;

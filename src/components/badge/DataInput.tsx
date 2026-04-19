@@ -19,6 +19,9 @@ export const DataInput: React.FC<DataInputProps> = ({
   onBulkSubmit,
   isReady,
 }) => {
+  // --- Estados Gerais ---
+  const [showTeam, setShowTeam] = useState(true);
+
   // --- Estados do Modo Manual ---
   const [name, setName] = useState('');
   const [team, setTeam] = useState('');
@@ -29,11 +32,14 @@ export const DataInput: React.FC<DataInputProps> = ({
   const [namesList, setNamesList] = useState<BadgeData[]>([]); // Variável que estava faltando!
 
   const handleAddToList = () => {
-    if (currentBulkName.trim() && currentBulkTeam.trim()) {
-      setNamesList([...namesList, { 
-        name: currentBulkName.trim(), 
-        team: currentBulkTeam.trim() 
-      }]);
+    if (currentBulkName.trim() && (!showTeam || currentBulkTeam.trim())) {
+      setNamesList([
+        ...namesList,
+        {
+          name: currentBulkName.trim(),
+          team: showTeam ? currentBulkTeam.trim() : '',
+        },
+      ]);
       setCurrentBulkName(''); // Limpa apenas o nome para agilizar
       // setCurrentBulkTeam(''); // Limpa o time para agilizar
     }
@@ -72,22 +78,39 @@ export const DataInput: React.FC<DataInputProps> = ({
       {mode === 'manual' ? (
         <div className="space-y-4 animate-in fade-in duration-300">
           <div className="space-y-2">
-            <Input
-              placeholder="Nome no Crachá"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              disabled={!isReady}
-            />
-            <Input
-              placeholder="Equipe/Cargo"
-              value={team}
-              onChange={(e) => setTeam(e.target.value)}
-              disabled={!isReady}
-            />
+            <div className="space-y-2">
+              <Input
+                placeholder="Nome no Crachá"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                disabled={!isReady}
+              />
+              <Input
+                placeholder="Equipe/Cargo"
+                value={team}
+                onChange={(e) => setTeam(e.target.value)}
+                disabled={!isReady || !showTeam}
+              />
+
+              <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer pt-1 pl-1">
+                <input
+                  type="checkbox"
+                  checked={showTeam}
+                  onChange={(e) => setShowTeam(e.target.checked)}
+                  className="w-4 h-4 rounded border-gray-300 text-primary cursor-pointer"
+                />
+                Incluir Equipe/Cargo no crachá
+              </label>
+            </div>
           </div>
           <Button
-            onClick={() => onSingleSubmit({ name, team })}
-            disabled={!isReady || !name || !team}
+            onClick={() =>
+              onSingleSubmit({
+                name,
+                team: showTeam ? team : '',
+              })
+            }
+            disabled={!isReady || !name || (showTeam && !team)}
             className="w-full"
           >
             Gerar Prévia <ArrowRight className="w-4 h-4 ml-2" />
@@ -95,40 +118,64 @@ export const DataInput: React.FC<DataInputProps> = ({
         </div>
       ) : (
         <div className="space-y-4 animate-in fade-in duration-300">
-          <div className="flex gap-2">
-            <div className="flex-1 space-y-2">
-              <Input
-                placeholder="Nome"
-                value={currentBulkName}
-                onChange={(e) => setCurrentBulkName(e.target.value)}
-                disabled={!isReady}
-              />
-              <Input
-                placeholder="Equipe"
-                value={currentBulkTeam}
-                onChange={(e) => setCurrentBulkTeam(e.target.value)}
-                disabled={!isReady}
-              />
+          <div className="space-y-2">
+            <div className="flex gap-2">
+              <div className="flex-1 space-y-2">
+                <Input
+                  placeholder="Nome"
+                  value={currentBulkName}
+                  onChange={(e) => setCurrentBulkName(e.target.value)}
+                  disabled={!isReady}
+                />
+                <Input
+                  placeholder="Equipe"
+                  value={currentBulkTeam}
+                  onChange={(e) => setCurrentBulkTeam(e.target.value)}
+                  disabled={!isReady || !showTeam}
+                />
+              </div>
+              <Button
+                size="icon"
+                onClick={handleAddToList}
+                disabled={
+                  !isReady || !currentBulkName || (showTeam && !currentBulkTeam)
+                }
+                className="h-auto"
+              >
+                <Plus className="w-5 h-5" />
+              </Button>
             </div>
-            <Button 
-              size="icon" 
-              onClick={handleAddToList}
-              disabled={!isReady || !currentBulkName || !currentBulkTeam}
-              className="h-auto"
-            >
-              <Plus className="w-5 h-5" />
-            </Button>
+
+            <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer pt-1 pl-1">
+              <input
+                type="checkbox"
+                checked={showTeam}
+                onChange={(e) => setShowTeam(e.target.checked)}
+                className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+              />
+              Incluir Equipe/Cargo no crachá
+            </label>
           </div>
 
           {/* Lista de Nomes Adicionados */}
           <div className="max-h-40 overflow-y-auto border rounded-lg bg-secondary/20 p-2 space-y-1">
             {namesList.length === 0 ? (
-              <p className="text-[10px] text-center text-muted-foreground py-4">Nenhum nome na lista</p>
+              <p className="text-[10px] text-center text-muted-foreground py-4">
+                Nenhum nome na lista
+              </p>
             ) : (
               namesList.map((item, i) => (
-                <div key={i} className="flex items-center justify-between bg-background p-2 rounded border text-xs">
-                  <span className="truncate flex-1"><strong>{item.name}</strong> - {item.team}</span>
-                  <button onClick={() => removeFromList(i)} className="text-destructive hover:bg-destructive/10 p-1 rounded">
+                <div
+                  key={i}
+                  className="flex items-center justify-between bg-background p-2 rounded border text-xs"
+                >
+                  <span className="truncate flex-1">
+                    <strong>{item.name}</strong> - {item.team}
+                  </span>
+                  <button
+                    onClick={() => removeFromList(i)}
+                    className="text-destructive hover:bg-destructive/10 p-1 rounded"
+                  >
                     <Trash2 className="w-3 h-3" />
                   </button>
                 </div>
