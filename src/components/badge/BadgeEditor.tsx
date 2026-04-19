@@ -3,10 +3,11 @@ import { BadgePoints, PointKey, InputMode, BadgeData } from '@/types/badge';
 import { BadgeCanvas, BadgeCanvasRef } from './BadgeCanvas';
 import { PointSelector } from './PointSelector';
 import { DataInput } from './DataInput';
-import { Download, RotateCcw, Sparkles } from 'lucide-react';
+import { Download, RotateCcw, Sparkles, FileText, Image } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
+import { jsPDF } from 'jspdf';
 
 interface BadgeEditorProps {
   hideHeader?: boolean;
@@ -126,6 +127,69 @@ export const BadgeEditor: React.FC = () => {
     setShowPreview(false);
   };
 
+  const exportToPdf = async (items: BadgeData[]) => {
+    if (items.length === 0) return;
+    setIsDownloading(true);
+
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4',
+    });
+
+    const pageWidth = 210;
+    const pageHeight = 297;
+    const badgeWidth = 100;
+    const badgeHeight = 70;
+    const margin = 4;
+    const gap = 2;
+
+    const cols = Math.floor(
+      (pageWidth - margin * 2 + gap) / (badgeWidth + gap),
+    );
+    const rowsPerPage = Math.floor(
+      (pageHeight - margin * 2 + gap) / (badgeHeight + gap),
+    );
+
+    let positionIndex = 0;
+
+    items.forEach((item, index) => {
+      let dataUrl: string | null = null;
+
+      if (inputMode === 'manual') {
+        const canvas = document.querySelector('canvas');
+        dataUrl = canvas ? canvas.toDataURL('image/png') : null;
+      } else {
+        const canvasRef = canvasRefs.current.get(index);
+        dataUrl = canvasRef?.getDataURL() || null;
+      }
+
+      if (!dataUrl) return;
+
+      const col = positionIndex % cols;
+      const row = Math.floor(positionIndex / cols) % rowsPerPage;
+      const x = margin + col * (badgeWidth + gap);
+      const y = margin + row * (badgeHeight + gap);
+
+      pdf.addImage(dataUrl, 'PNG', x, y, badgeWidth, badgeHeight);
+      positionIndex++;
+
+      if (positionIndex >= cols * rowsPerPage && index < items.length - 1) {
+        pdf.addPage();
+        positionIndex = 0;
+      }
+    });
+
+    const fileName =
+      items.length === 1
+        ? `cracha-${items[0].name.replace(/\s+/g, '-').toLowerCase() || 'badge'}.pdf`
+        : `crachas-impressao-a4.pdf`;
+    pdf.save(fileName);
+    setIsDownloading(false);
+  };
+
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
@@ -175,19 +239,52 @@ export const BadgeEditor: React.FC = () => {
 
             {showPreview && (
               <div className="space-y-2">
-                <Button
-                  className="w-full bg-green-600 hover:bg-green-700"
-                  onClick={
-                    inputMode === 'manual' ? () => {} : handleDownloadBulk
-                  }
-                >
-                  <Download className="w-4 h-4 mr-2" />
-                  {loading ? 'Processando...' : 'Baixar Resultados'}
-                </Button>
-                <Button
-                  variant="ghost"
-                  className="w-full"
+                {/* Divide a exibição dependendo do modo atual */}
+                {inputMode === 'manual' ? (
+                  <div className="flex gap-2">
+                    <Button 
+                      className="flex-1 bg-green-600 hover:bg-green-700 text-white" 
+                      onClick={handleDownloadSingle}
+                      disabled={isDownloading}
+                    >
+                      <Image className="w-4 h-4 mr-2" /> 
+                      {isDownloading ? 'Aguarde...' : 'Baixar PNG'}
+                    </Button>
+                    <Button 
+                      className="flex-1 bg-red-600 hover:bg-red-700 text-white" 
+                      onClick={() => exportToPdf([singleData!])}
+                      disabled={isDownloading}
+                    >
+                      <FileText className="w-4 h-4 mr-2" /> 
+                      {isDownloading ? 'Aguarde...' : 'Baixar PDF'}
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <Button 
+                      className="flex-1 bg-green-600 hover:bg-green-700 text-white" 
+                      onClick={handleDownloadBulk} 
+                      disabled={isDownloading}
+                    >
+                      <Download className="w-4 h-4 mr-2" /> 
+                      {isDownloading ? 'Gerando...' : 'Baixar ZIP'}
+                    </Button>
+                    <Button 
+                      className="flex-1 bg-red-600 hover:bg-red-700 text-white" 
+                      onClick={() => exportToPdf(bulkData)} 
+                      disabled={isDownloading}
+                    >
+                      <FileText className="w-4 h-4 mr-2" /> 
+                      {isDownloading ? 'Gerando...' : 'PDF (A4)'}
+                    </Button>
+                  </div>
+                )}
+                
+                <Button 
+                  variant="ghost" 
+                  className="w-full" 
                   onClick={() => setShowPreview(false)}
+                  disabled={isDownloading}
                 >
                   <RotateCcw className="w-4 h-4 mr-2" /> Editar Dados
                 </Button>
