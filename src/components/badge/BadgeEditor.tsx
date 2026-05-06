@@ -123,19 +123,19 @@ export const BadgeEditor: React.FC = () => {
       format: 'a4',
     });
 
-    const pageWidth = 210;
-    const pageHeight = 297;
-    const badgeWidth = 100;
-    const badgeHeight = 150;
-    const margin = 2;
-    const gap = 1;
-
     // const pageWidth = 210;
     // const pageHeight = 297;
     // const badgeWidth = 100;
-    // const badgeHeight = 70;
-    // const margin = 4;
-    // const gap = 2;
+    // const badgeHeight = 150;
+    // const margin = 2;
+    // const gap = 1;
+
+    const pageWidth = 210;
+    const pageHeight = 297;
+    const badgeWidth = 100;
+    const badgeHeight = 70;
+    const margin = 4;
+    const gap = 2;
 
     const cols = Math.floor(
       (pageWidth - margin * 2 + gap) / (badgeWidth + gap),
