@@ -109,11 +109,11 @@ export const BadgeCanvas = forwardRef<BadgeCanvasRef, BadgeCanvasProps>(
 
           const initialNameSize = Math.max(24, Math.min(areaHeight * 0.50, areaWidth * 0.15));
           const nameFontSize = findOptimalFontSize(badgeData.name, maxTextWidth, initialNameSize, 14);
-          
+
           // Lógica para desenhar o texto dependendo de ter Equipe ou não
           const hasTeam = badgeData.team && badgeData.team.trim() !== '';
 
-          ctx.fillStyle = '#000000';
+          ctx.fillStyle = '#ffffff';
           ctx.font = `bold ${nameFontSize}px Inter, sans-serif`;
 
           if (hasTeam) {
@@ -125,7 +125,7 @@ export const BadgeCanvas = forwardRef<BadgeCanvasRef, BadgeCanvasProps>(
 
             ctx.fillText(badgeData.name, centerX, nameY);
 
-            ctx.fillStyle = 'rgba(59, 59, 59, 0.85)';
+            ctx.fillStyle = 'rgba(197, 197, 197, 0.85)';
             ctx.font = `${teamFontSize}px Inter, sans-serif`;
             ctx.fillText(badgeData.team, centerX, teamY);
           } else {
