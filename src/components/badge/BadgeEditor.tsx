@@ -143,10 +143,10 @@ export const BadgeEditor: React.FC = () => {
 
       if (inputMode === 'manual') {
         const canvas = document.querySelector('canvas');
-        dataUrl = canvas ? canvas.toDataURL('image/png') : null;
+        dataUrl = canvas ? canvas.toDataURL('image/jpeg', 0.7) : null;
       } else {
         const canvasRef = canvasRefs.current.get(index);
-        dataUrl = canvasRef?.getDataURL() || null;
+        dataUrl = canvasRef?.getDataURL('image/jpeg', 0.7) || null;
       }
 
       if (!dataUrl) return;
@@ -156,7 +156,7 @@ export const BadgeEditor: React.FC = () => {
       const x = margin + col * (badgeWidth + gap);
       const y = margin + row * (badgeHeight + gap);
 
-      pdf.addImage(dataUrl, 'PNG', x, y, badgeWidth, badgeHeight);
+      pdf.addImage(dataUrl, 'JPEG', x, y, badgeWidth, badgeHeight, undefined, 'FAST');
       positionIndex++;
 
       if (positionIndex >= cols * rowsPerPage && index < items.length - 1) {

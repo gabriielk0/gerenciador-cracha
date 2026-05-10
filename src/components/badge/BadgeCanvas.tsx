@@ -13,7 +13,7 @@ interface BadgeCanvasProps {
 }
 
 export interface BadgeCanvasRef {
-  getDataURL: () => string | null;
+  getDataURL: (type?: string, quality?: number) => string | null;
 }
 
 const pointColors: Record<PointKey, string> = {
@@ -34,10 +34,10 @@ export const BadgeCanvas = forwardRef<BadgeCanvasRef, BadgeCanvasProps>(
     const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
 
     useImperativeHandle(ref, () => ({
-      getDataURL: () => {
+      getDataURL: (type = 'image/png', quality = 1) => {
         const canvas = canvasRef.current;
         if (!canvas) return null;
-        return canvas.toDataURL('image/png');
+        return canvas.toDataURL(type, quality);
       },
     }));
 
