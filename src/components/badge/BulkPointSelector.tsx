@@ -93,7 +93,14 @@ export const BulkPointSelector: React.FC<BulkPointSelectorProps> = ({
   const drawPoints = (ctx: CanvasRenderingContext2D, currentScale: number) => {
     const colors = ['#f472b6', '#a78bfa', '#4ade80', '#facc15'];
 
-    Object.entries(points).forEach(([key, point], index) => {
+    const orderedPoints: PointKey[] = [
+      'topLeft',
+      'topRight',
+      'bottomLeft',
+      'bottomRight',
+    ];
+    orderedPoints.forEach((key, index) => {
+      const point = points[key];
       if (!point) return;
 
       const x = point.x * currentScale;
