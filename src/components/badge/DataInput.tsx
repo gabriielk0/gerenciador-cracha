@@ -86,6 +86,15 @@ export const DataInput: React.FC<DataInputProps> = ({
     }
   };
 
+  const handleClearList = () => {
+    if (window.confirm('Tem certeza que deseja limpar a lista?')) {
+      setNamesList([]);
+      setEditingIndex(null);
+      setCurrentBulkName('');
+      setCurrentBulkTeam('');
+    }
+  };
+
   return (
     <div className="space-y-4">
       {/* Tabs de Modo */}
@@ -169,7 +178,6 @@ export const DataInput: React.FC<DataInputProps> = ({
                   placeholder="Equipe"
                   value={currentBulkTeam}
                   onChange={(e) => setCurrentBulkTeam(e.target.value)}
-                  onKeyDown={handleKeyDown}
                   disabled={!isReady || !showTeam}
                 />
               </div>
