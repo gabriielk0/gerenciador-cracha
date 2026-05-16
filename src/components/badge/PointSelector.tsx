@@ -10,10 +10,10 @@ interface PointSelectorProps {
 }
 
 const pointConfig: { key: PointKey; label: string; description: string; colorClass: string }[] = [
-  { key: 'topRight', label: '1', description: 'Superior Direito', colorClass: 'point-1' },
-  { key: 'topLeft', label: '2', description: 'Superior Esquerdo', colorClass: 'point-2' },
-  { key: 'bottomRight', label: '3', description: 'Inferior Direito', colorClass: 'point-3' },
-  { key: 'bottomLeft', label: '4', description: 'Inferior Esquerdo', colorClass: 'point-4' },
+  { key: 'topRight', label: '1', description: 'Superior Esquerdo', colorClass: 'point-1' },
+  { key: 'topLeft', label: '2', description: 'Superior Direito', colorClass: 'point-2' },
+  { key: 'bottomRight', label: '3', description: 'Inferior Esquerdo', colorClass: 'point-3' },
+  { key: 'bottomLeft', label: '4', description: 'Inferior Direito', colorClass: 'point-4' },
 ];
 
 export const PointSelector: React.FC<PointSelectorProps> = ({
