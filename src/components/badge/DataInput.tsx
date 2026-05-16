@@ -60,7 +60,6 @@ export const DataInput: React.FC<DataInputProps> = ({
         ]);
       }
       setCurrentBulkName('');
-      setCurrentBulkTeam('');
     }
   };
 
@@ -178,6 +177,7 @@ export const DataInput: React.FC<DataInputProps> = ({
                   placeholder="Equipe"
                   value={currentBulkTeam}
                   onChange={(e) => setCurrentBulkTeam(e.target.value)}
+                  onKeyDown={handleKeyDown}
                   disabled={!isReady || !showTeam}
                 />
               </div>
