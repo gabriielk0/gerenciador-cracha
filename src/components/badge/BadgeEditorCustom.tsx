@@ -9,18 +9,21 @@ import {
   IdCard,
   FileText,
   Image,
-  Settings,
+  ArrowLeft,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { jsPDF } from 'jspdf';
 
-interface BadgeEditorProps {
+interface BadgeEditorCustomProps {
   hideHeader?: boolean;
 }
 
-export const BadgeEditor: React.FC = () => {
+export const BadgeEditorCustom: React.FC<BadgeEditorCustomProps> = ({
+  hideHeader,
+}) => {
   const [image, setImage] = useState<string | null>(null);
   const [points, setPoints] = useState<BadgePoints>({
     topRight: null,
@@ -29,6 +32,30 @@ export const BadgeEditor: React.FC = () => {
     bottomLeft: null,
   });
   const [activePoint, setActivePoint] = useState<PointKey | null>(null);
+
+  // Dimensões customizáveis do PDF
+  const [badgeWidth, setBadgeWidth] = useState<number>(100);
+  const [badgeHeight, setBadgeHeight] = useState<number>(150);
+
+  // Carregar dimensões salvas no localStorage quando o componente for montado
+  useEffect(() => {
+    const savedWidth = localStorage.getItem('customBadgeWidth');
+    const savedHeight = localStorage.getItem('customBadgeHeight');
+    if (savedWidth) setBadgeWidth(Number(savedWidth));
+    if (savedHeight) setBadgeHeight(Number(savedHeight));
+  }, []);
+
+  const handleWidthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = Number(e.target.value) || 0;
+    setBadgeWidth(val);
+    localStorage.setItem('customBadgeWidth', val.toString());
+  };
+
+  const handleHeightChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = Number(e.target.value) || 0;
+    setBadgeHeight(val);
+    localStorage.setItem('customBadgeHeight', val.toString());
+  };
 
   // Controle de modo
   const [inputMode, setInputMode] = useState<InputMode>('manual');
@@ -147,24 +174,14 @@ export const BadgeEditor: React.FC = () => {
 
     const pdf = new jsPDF({
       orientation: 'portrait',
-      // orientation: 'landscape',
       unit: 'mm',
       format: 'a4',
     });
 
-    // const pageWidth = 210;
-    // const pageHeight = 297;
-    // const badgeWidth = 100;
-    // const badgeHeight = 150;
-    // const margin = 2;
-    // const gap = 1;
-
     const pageWidth = 210;
     const pageHeight = 297;
-    const badgeWidth = 100;
-    const badgeHeight = 70;
-    const margin = 4;
-    const gap = 2;
+    const margin = 2;
+    const gap = 1;
 
     const cols = Math.floor(
       (pageWidth - margin * 2 + gap) / (badgeWidth + gap),
@@ -222,29 +239,62 @@ export const BadgeEditor: React.FC = () => {
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
-        <header className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
+        {!hideHeader && (
+          <header className="mb-8 flex items-center gap-3">
+            <a href="/">
+              <Button
+                variant="ghost"
+                size="icon"
+                title="Voltar"
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </Button>
+            </a>
             <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-primary-foreground">
               <IdCard />
             </div>
             <div>
-              <h1 className="text-2xl font-bold">Gerador de Crachás</h1>
-              <p className="text-muted-foreground text-sm">Manual e Lista</p>
+              <h1 className="text-2xl font-bold">
+                Gerador de Crachás (Custom)
+              </h1>
+              <p className="text-muted-foreground text-sm">
+                Dimensões customizáveis
+              </p>
             </div>
-          </div>
-          <a href="/badge-custom">
-            <Button
-              variant="outline"
-              className="w-full md:w-auto text-muted-foreground hover:text-foreground"
-            >
-              <Settings className="w-4 h-4 mr-2" />
-              Versão Customizada
-            </Button>
-          </a>
-        </header>
+          </header>
+        )}
 
         <div className="grid lg:grid-cols-[320px_1fr] gap-6">
           <aside className="space-y-6">
+            <div className="glass-panel p-5 rounded-2xl border space-y-4">
+              <h2 className="text-sm font-semibold">
+                Dimensões do Crachá (PDF)
+              </h2>
+              <div className="flex gap-4">
+                <div className="space-y-1.5 flex-1">
+                  <label className="text-xs text-muted-foreground">
+                    Largura (mm)
+                  </label>
+                  <Input
+                    type="number"
+                    value={badgeWidth}
+                    onChange={handleWidthChange}
+                  />
+                </div>
+                <div className="space-y-1.5 flex-1">
+                  <label className="text-xs text-muted-foreground">
+                    Altura (mm)
+                  </label>
+                  <Input
+                    type="number"
+                    value={badgeHeight}
+                    onChange={handleHeightChange}
+                  />
+                </div>
+              </div>
+            </div>
+
             <div className="glass-panel p-5 rounded-2xl border">
               <PointSelector
                 points={points}
@@ -277,7 +327,6 @@ export const BadgeEditor: React.FC = () => {
 
             {showPreview && (
               <div className="space-y-2">
-                {/* Divide a exibição dependendo do modo atual */}
                 {inputMode === 'manual' ? (
                   <div className="flex gap-2">
                     <Button
@@ -341,7 +390,6 @@ export const BadgeEditor: React.FC = () => {
           </aside>
 
           <main className="glass-panel p-5 rounded-2xl border min-h-[500px] bg-secondary/10">
-            {/* Se não for prévia bulk, mostra o canvas interativo normal */}
             {!(showPreview && inputMode === 'bulk') ? (
               <BadgeCanvas
                 image={image}
