@@ -209,7 +209,21 @@ export const DataInput: React.FC<DataInputProps> = ({
             </label>
           </div>
 
-          {/* Lista de Nomes Adicionados */}
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-sm font-medium text-foreground">
+              Lista de Nomes Adicionados
+            </p>
+            <Button
+              onClick={handleClearList}
+              disabled={namesList.length === 0}
+              variant="secondary"
+              className="h-10"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Limpar Lista
+            </Button>
+          </div>
+
           <div className="max-h-40 overflow-y-auto border rounded-lg bg-secondary/20 p-2 space-y-1">
             {namesList.length === 0 ? (
               <p className="text-[10px] text-center text-muted-foreground py-4">
