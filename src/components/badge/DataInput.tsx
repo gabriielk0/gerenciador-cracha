@@ -2,7 +2,15 @@ import React, { useState } from 'react';
 import { InputMode, BadgeData } from '@/types/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { PenLine, Users, ArrowRight, Check, Plus, Trash2 } from 'lucide-react';
+import {
+  PenLine,
+  Users,
+  ArrowRight,
+  Check,
+  Plus,
+  Trash2,
+  Pencil,
+} from 'lucide-react';
 
 interface DataInputProps {
   mode: InputMode;
@@ -30,23 +38,52 @@ export const DataInput: React.FC<DataInputProps> = ({
   const [currentBulkName, setCurrentBulkName] = useState('');
   const [currentBulkTeam, setCurrentBulkTeam] = useState('');
   const [namesList, setNamesList] = useState<BadgeData[]>([]); // Variável que estava faltando!
+  const [editingIndex, setEditingIndex] = useState<number | null>(null); // Para controlar qual item está sendo editado
 
-  const handleAddToList = () => {
+  const handleAddOrUpdateToList = () => {
     if (currentBulkName.trim() && (!showTeam || currentBulkTeam.trim())) {
-      setNamesList([
-        ...namesList,
-        {
+      if (editingIndex !== null) {
+        const updatedList = [...namesList];
+        updatedList[editingIndex] = {
           name: currentBulkName.trim(),
           team: showTeam ? currentBulkTeam.trim() : '',
-        },
-      ]);
-      setCurrentBulkName(''); // Limpa apenas o nome para agilizar
-      // setCurrentBulkTeam(''); // Limpa o time para agilizar
+        };
+        setNamesList(updatedList);
+        setEditingIndex(null);
+      } else {
+        setNamesList([
+          ...namesList,
+          {
+            name: currentBulkName.trim(),
+            team: showTeam ? currentBulkTeam.trim() : '',
+          },
+        ]);
+      }
+      setCurrentBulkName('');
+      setCurrentBulkTeam('');
     }
+  };
+
+  const handleEdit = (index: number) => {
+    setCurrentBulkName(namesList[index].name);
+    setCurrentBulkTeam(namesList[index].team);
+    setEditingIndex(index);
   };
 
   const removeFromList = (index: number) => {
     setNamesList(namesList.filter((_, i) => i !== index));
+    if (editingIndex === index) {
+      setEditingIndex(null);
+      setCurrentBulkName('');
+      setCurrentBulkTeam('');
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddOrUpdateToList();
+    }
   };
 
   return (
@@ -125,24 +162,31 @@ export const DataInput: React.FC<DataInputProps> = ({
                   placeholder="Nome"
                   value={currentBulkName}
                   onChange={(e) => setCurrentBulkName(e.target.value)}
+                  onKeyDown={handleKeyDown}
                   disabled={!isReady}
                 />
                 <Input
                   placeholder="Equipe"
                   value={currentBulkTeam}
                   onChange={(e) => setCurrentBulkTeam(e.target.value)}
+                  onKeyDown={handleKeyDown}
                   disabled={!isReady || !showTeam}
                 />
               </div>
               <Button
                 size="icon"
-                onClick={handleAddToList}
+                onClick={handleAddOrUpdateToList}
                 disabled={
                   !isReady || !currentBulkName || (showTeam && !currentBulkTeam)
                 }
                 className="h-auto"
+                variant={editingIndex !== null ? 'secondary' : 'default'}
               >
-                <Plus className="w-5 h-5" />
+                {editingIndex !== null ? (
+                  <Check className="w-5 h-5" />
+                ) : (
+                  <Plus className="w-5 h-5" />
+                )}
               </Button>
             </div>
 
@@ -167,17 +211,27 @@ export const DataInput: React.FC<DataInputProps> = ({
               namesList.map((item, i) => (
                 <div
                   key={i}
-                  className="flex items-center justify-between bg-background p-2 rounded border text-xs"
+                  className={`flex items-center justify-between p-2 rounded border text-xs transition-colors ${editingIndex === i ? 'bg-secondary border-primary/50' : 'bg-background'}`}
                 >
                   <span className="truncate flex-1">
                     <strong>{item.name}</strong> - {item.team}
                   </span>
-                  <button
-                    onClick={() => removeFromList(i)}
-                    className="text-destructive hover:bg-destructive/10 p-1 rounded"
-                  >
-                    <Trash2 className="w-3 h-3" />
-                  </button>
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => handleEdit(i)}
+                      className="text-primary hover:bg-primary/10 p-1 rounded"
+                      title="Editar"
+                    >
+                      <Pencil className="w-3 h-3" />
+                    </button>
+                    <button
+                      onClick={() => removeFromList(i)}
+                      className="text-destructive hover:bg-destructive/10 p-1 rounded"
+                      title="Excluir"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  </div>
                 </div>
               ))
             )}
