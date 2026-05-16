@@ -11,11 +11,36 @@ interface BulkPointSelectorProps {
   onSelectPoint: (key: PointKey) => void;
 }
 
-const pointConfig: { key: PointKey; label: string; description: string; colorClass: string }[] = [
-  { key: 'topRight', label: '1', description: 'Superior Direito', colorClass: 'point-1' },
-  { key: 'topLeft', label: '2', description: 'Superior Esquerdo', colorClass: 'point-2' },
-  { key: 'bottomRight', label: '3', description: 'Inferior Direito', colorClass: 'point-3' },
-  { key: 'bottomLeft', label: '4', description: 'Inferior Esquerdo', colorClass: 'point-4' },
+const pointConfig: {
+  key: PointKey;
+  label: string;
+  description: string;
+  colorClass: string;
+}[] = [
+  {
+    key: 'topLeft',
+    label: '1',
+    description: 'Superior Esquerdo',
+    colorClass: 'point-1',
+  },
+  {
+    key: 'topRight',
+    label: '2',
+    description: 'Superior Direito',
+    colorClass: 'point-2',
+  },
+  {
+    key: 'bottomLeft',
+    label: '3',
+    description: 'Inferior Esquerdo',
+    colorClass: 'point-3',
+  },
+  {
+    key: 'bottomRight',
+    label: '4',
+    description: 'Inferior Direito',
+    colorClass: 'point-4',
+  },
 ];
 
 export const BulkPointSelector: React.FC<BulkPointSelectorProps> = ({
@@ -47,7 +72,7 @@ export const BulkPointSelector: React.FC<BulkPointSelectorProps> = ({
 
       const maxWidth = container.clientWidth;
       const maxHeight = 300;
-      
+
       let newScale = 1;
       if (img.width > maxWidth || img.height > maxHeight) {
         newScale = Math.min(maxWidth / img.width, maxHeight / img.height);
@@ -67,13 +92,13 @@ export const BulkPointSelector: React.FC<BulkPointSelectorProps> = ({
 
   const drawPoints = (ctx: CanvasRenderingContext2D, currentScale: number) => {
     const colors = ['#f472b6', '#a78bfa', '#4ade80', '#facc15'];
-    
+
     Object.entries(points).forEach(([key, point], index) => {
       if (!point) return;
-      
+
       const x = point.x * currentScale;
       const y = point.y * currentScale;
-      
+
       ctx.beginPath();
       ctx.arc(x, y, 8, 0, Math.PI * 2);
       ctx.fillStyle = colors[index];
@@ -81,7 +106,7 @@ export const BulkPointSelector: React.FC<BulkPointSelectorProps> = ({
       ctx.strokeStyle = '#ffffff';
       ctx.lineWidth = 2;
       ctx.stroke();
-      
+
       ctx.fillStyle = '#000000';
       ctx.font = 'bold 10px sans-serif';
       ctx.textAlign = 'center';
@@ -158,7 +183,9 @@ export const BulkPointSelector: React.FC<BulkPointSelectorProps> = ({
         {!image ? (
           <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-border rounded-xl cursor-pointer hover:border-primary/50 transition-colors bg-secondary/30">
             <Upload className="w-10 h-10 text-muted-foreground mb-2" />
-            <span className="text-sm text-muted-foreground">Carregar modelo do crachá</span>
+            <span className="text-sm text-muted-foreground">
+              Carregar modelo do crachá
+            </span>
             <input
               type="file"
               accept="image/*"
@@ -195,11 +222,13 @@ export const BulkPointSelector: React.FC<BulkPointSelectorProps> = ({
                     isActive
                       ? 'border-primary bg-primary/10'
                       : point
-                      ? 'border-success/50 bg-success/10'
-                      : 'border-border hover:border-primary/50'
+                        ? 'border-success/50 bg-success/10'
+                        : 'border-border hover:border-primary/50'
                   }`}
                 >
-                  <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${colorClass}`}>
+                  <div
+                    className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${colorClass}`}
+                  >
                     {point ? <Check className="w-3 h-3" /> : label}
                   </div>
                   <span className="text-foreground">{description}</span>

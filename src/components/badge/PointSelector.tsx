@@ -9,11 +9,36 @@ interface PointSelectorProps {
   hasImage: boolean;
 }
 
-const pointConfig: { key: PointKey; label: string; description: string; colorClass: string }[] = [
-  { key: 'topRight', label: '1', description: 'Superior Esquerdo', colorClass: 'point-1' },
-  { key: 'topLeft', label: '2', description: 'Superior Direito', colorClass: 'point-2' },
-  { key: 'bottomRight', label: '3', description: 'Inferior Esquerdo', colorClass: 'point-3' },
-  { key: 'bottomLeft', label: '4', description: 'Inferior Direito', colorClass: 'point-4' },
+const pointConfig: {
+  key: PointKey;
+  label: string;
+  description: string;
+  colorClass: string;
+}[] = [
+  {
+    key: 'topLeft',
+    label: '1',
+    description: 'Superior Esquerdo',
+    colorClass: 'point-1',
+  },
+  {
+    key: 'topRight',
+    label: '2',
+    description: 'Superior Direito',
+    colorClass: 'point-2',
+  },
+  {
+    key: 'bottomLeft',
+    label: '3',
+    description: 'Inferior Esquerdo',
+    colorClass: 'point-3',
+  },
+  {
+    key: 'bottomRight',
+    label: '4',
+    description: 'Inferior Direito',
+    colorClass: 'point-4',
+  },
 ];
 
 export const PointSelector: React.FC<PointSelectorProps> = ({
@@ -26,7 +51,9 @@ export const PointSelector: React.FC<PointSelectorProps> = ({
     <div className="space-y-3">
       <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
         <MousePointer2 className="w-4 h-4" />
-        <span>Clique em um ponto e depois clique na imagem</span>
+        <span>
+          Use Alt+1..Alt+4 para selecionar o ponto, depois clique na imagem
+        </span>
       </div>
 
       {pointConfig.map(({ key, label, description, colorClass }) => {
@@ -40,11 +67,15 @@ export const PointSelector: React.FC<PointSelectorProps> = ({
             disabled={!hasImage}
             className={`input-group w-full text-left ${isActive ? 'active' : ''} ${!hasImage ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
           >
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${colorClass}`}>
+            <div
+              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${colorClass}`}
+            >
               {label}
             </div>
             <div className="flex-1">
-              <p className="text-sm font-medium text-foreground">{description}</p>
+              <p className="text-sm font-medium text-foreground">
+                {description}
+              </p>
               {point ? (
                 <p className="text-xs text-muted-foreground">
                   X: {point.x} | Y: {point.y}

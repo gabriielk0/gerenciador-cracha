@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { BadgePoints, PointKey, InputMode, BadgeData } from '@/types/badge';
 import { BadgeCanvas, BadgeCanvasRef } from './BadgeCanvas';
 import { PointSelector } from './PointSelector';
@@ -48,6 +48,28 @@ export const BadgeEditor: React.FC = () => {
   const handleSelectPoint = (key: PointKey) => {
     setActivePoint(activePoint === key ? null : key);
   };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!e.altKey) return;
+
+      const pointMap: Record<string, PointKey> = {
+        '1': 'topLeft',
+        '2': 'topRight',
+        '3': 'bottomLeft',
+        '4': 'bottomRight',
+      };
+
+      const pointKey = pointMap[e.key];
+      if (!pointKey || !image) return;
+
+      e.preventDefault();
+      setActivePoint((current) => (current === pointKey ? null : pointKey));
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [image]);
 
   const handleModeChange = (mode: InputMode) => {
     setInputMode(mode);
@@ -164,7 +186,16 @@ export const BadgeEditor: React.FC = () => {
       const x = margin + col * (badgeWidth + gap);
       const y = margin + row * (badgeHeight + gap);
 
-      pdf.addImage(dataUrl, 'JPEG', x, y, badgeWidth, badgeHeight, undefined, 'FAST');
+      pdf.addImage(
+        dataUrl,
+        'JPEG',
+        x,
+        y,
+        badgeWidth,
+        badgeHeight,
+        undefined,
+        'FAST',
+      );
       positionIndex++;
 
       if (positionIndex >= cols * rowsPerPage && index < items.length - 1) {
