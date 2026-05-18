@@ -1,87 +1,58 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { BadgePoints, PointKey, InputMode, BadgeData } from '@/types/badge';
-import { BadgeCanvas, BadgeCanvasRef } from './BadgeCanvas';
-import { PointSelector } from './PointSelector';
-import { DataInput } from './DataInput';
-import {
-  Download,
-  RotateCcw,
-  IdCard,
-  FileText,
-  Image,
-  ArrowLeft,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useState, useRef, useEffect } from 'react';
+import { BadgeCanvas, BadgeCanvasRef } from '@/components/badge/BadgeCanvas';
+import { DataInput } from '@/components/badge/DataInput';
+import { PointSelector } from '@/components/badge/PointSelector';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { BadgeData, BadgePoints, InputMode, PointKey } from '@/types/badge';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { toast } from '@/components/ui/use-toast';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
+import { Download, FileText, ArrowLeft } from 'lucide-react';
+import { DesignSettings } from './DesignSettings';
 import { jsPDF } from 'jspdf';
 
-interface BadgeEditorCustomProps {
-  hideHeader?: boolean;
-}
+const pointSteps: PointKey[] = [
+  'topLeft',
+  'topRight',
+  'bottomLeft',
+  'bottomRight',
+];
 
-export const BadgeEditorCustom: React.FC<BadgeEditorCustomProps> = ({
-  hideHeader,
-}) => {
+export function BadgeEditorCustom() {
+  const canvasRef = useRef<BadgeCanvasRef>(null);
   const [image, setImage] = useState<string | null>(null);
   const [points, setPoints] = useState<BadgePoints>({
-    topRight: null,
     topLeft: null,
-    bottomRight: null,
+    topRight: null,
     bottomLeft: null,
+    bottomRight: null,
   });
-  const [activePoint, setActivePoint] = useState<PointKey | null>(null);
-
-  // Dimensões customizáveis do PDF
-  const [badgeWidth, setBadgeWidth] = useState<number>(100);
-  const [badgeHeight, setBadgeHeight] = useState<number>(150);
-
-  // Carregar dimensões salvas no localStorage quando o componente for montado
-  useEffect(() => {
-    const savedWidth = localStorage.getItem('customBadgeWidth');
-    const savedHeight = localStorage.getItem('customBadgeHeight');
-    if (savedWidth) setBadgeWidth(Number(savedWidth));
-    if (savedHeight) setBadgeHeight(Number(savedHeight));
-  }, []);
-
-  const handleWidthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = Number(e.target.value) || 0;
-    setBadgeWidth(val);
-    localStorage.setItem('customBadgeWidth', val.toString());
-  };
-
-  const handleHeightChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = Number(e.target.value) || 0;
-    setBadgeHeight(val);
-    localStorage.setItem('customBadgeHeight', val.toString());
-  };
-
-  // Controle de modo
-  const [inputMode, setInputMode] = useState<InputMode>('manual');
-
-  // Dados salvo
-  const [singleData, setSingleData] = useState<BadgeData | null>(null);
+  const [activePoint, setActivePoint] = useState<PointKey | null>('topLeft');
+  const [mode, setMode] = useState<InputMode>('manual');
+  const [badgeData, setBadgeData] = useState<BadgeData | null>(null);
   const [bulkData, setBulkData] = useState<BadgeData[]>([]);
-  const [showPreview, setShowPreview] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [isDownloading, setIsDownloading] = useState(false);
-
   const canvasRefs = useRef<Map<number, BadgeCanvasRef>>(new Map());
-  const allPointsSet = Object.values(points).every((p) => p !== null);
+  const [showPreview, setShowPreview] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
 
-  const handlePointClick = (x: number, y: number) => {
-    if (!activePoint) return;
-    setPoints((prev) => ({
-      ...prev,
-      [activePoint]: { x, y },
-    }));
-    setActivePoint(null);
-  };
+  // --- Estados do Tamanho Customizado ---
+  const [badgeWidth, setBadgeWidth] = useState<number>(54);
+  const [badgeHeight, setBadgeHeight] = useState<number>(86);
 
-  const handleSelectPoint = (key: PointKey) => {
-    setActivePoint(activePoint === key ? null : key);
-  };
+  // --- Novos estados para as configurações de design ---
+  const [textColor, setTextColor] = useState('#FFFFFF');
+  const [fontFamily, setFontFamily] = useState('Inter, sans-serif');
+
+  const isReady = Object.values(points).every((p) => p !== null);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -105,42 +76,64 @@ export const BadgeEditorCustom: React.FC<BadgeEditorCustomProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [image]);
 
-  const handleModeChange = (mode: InputMode) => {
-    setInputMode(mode);
+  const handlePointClick = (x: number, y: number) => {
+    if (!activePoint) return;
+
+    setPoints((prev) => ({ ...prev, [activePoint]: { x, y } }));
+
+    const currentIndex = pointSteps.indexOf(activePoint);
+    const nextPoint = pointSteps[currentIndex + 1] || null;
+    setActivePoint(nextPoint);
+
+    if (currentIndex === pointSteps.length - 1) {
+      toast({
+        title: 'Pronto!',
+        description: 'Área do crachá definida. Agora insira os dados.',
+      });
+    }
+  };
+
+  const handleResetPoints = () => {
+    setPoints({
+      topLeft: null,
+      topRight: null,
+      bottomLeft: null,
+      bottomRight: null,
+    });
+    setActivePoint('topLeft');
     setShowPreview(false);
+    setBadgeData(null);
+    setBulkData([]);
   };
 
   const handleSingleSubmit = (data: BadgeData) => {
-    setSingleData(data);
+    setBadgeData(data);
     setShowPreview(true);
   };
 
-  const handleBulkSubmit = (data: BadgeData[]) => {
+  const generateSingleBadge = () => {
+    const dataURL = canvasRef.current?.getDataURL();
+    if (dataURL && badgeData) {
+      saveAs(dataURL, `cracha-${badgeData.name.replace(/ /g, '_')}.png`);
+    }
+  };
+
+  const handleBulkSubmit = async (data: BadgeData[]) => {
     setBulkData(data);
-    setSingleData(null);
+    setBadgeData(null);
     setShowPreview(true);
   };
 
-  const handleDownloadSingle = () => {
-    const canvas = document.querySelector('canvas');
-    if (!canvas || !singleData) return;
-
-    const link = document.createElement('a');
-    link.download = `cracha-${singleData?.name.replace(/\s+/g, '-').toLowerCase() || 'badge'}.png`;
-    link.href = canvas.toDataURL('image/png');
-    link.click();
-  };
-
-  const handleDownloadBulk = async () => {
+  const generateBulkZip = async () => {
     if (bulkData.length === 0) return;
-    setIsDownloading(true);
+    setIsGenerating(true);
 
     const zip = new JSZip();
     await new Promise((resolve) => setTimeout(resolve, 500));
 
     bulkData.forEach((_, index) => {
-      const canvasRef = canvasRefs.current.get(index);
-      const dataUrl = canvasRef?.getDataURL();
+      const canvasRefEl = canvasRefs.current.get(index);
+      const dataUrl = canvasRefEl?.getDataURL();
       if (dataUrl) {
         const base64Data = dataUrl.split(',')[1];
         zip.file(`cracha-${index + 1}.png`, base64Data, { base64: true });
@@ -149,26 +142,12 @@ export const BadgeEditorCustom: React.FC<BadgeEditorCustomProps> = ({
 
     const content = await zip.generateAsync({ type: 'blob' });
     saveAs(content, `crachas-${new Date().toISOString().split('T')[0]}.zip`);
-    setIsDownloading(false);
-  };
-
-  const handleFullReset = () => {
-    setImage(null);
-    setPoints({
-      topRight: null,
-      topLeft: null,
-      bottomRight: null,
-      bottomLeft: null,
-    });
-    setActivePoint(null);
-    setSingleData(null);
-    setBulkData([]);
-    setShowPreview(false);
+    setIsGenerating(false);
   };
 
   const exportToPdf = async (items: BadgeData[]) => {
     if (items.length === 0) return;
-    setIsDownloading(true);
+    setIsGenerating(true);
 
     await new Promise((resolve) => setTimeout(resolve, 500));
 
@@ -180,8 +159,8 @@ export const BadgeEditorCustom: React.FC<BadgeEditorCustomProps> = ({
 
     const pageWidth = 210;
     const pageHeight = 297;
-    const margin = 2;
-    const gap = 1;
+    const margin = 4;
+    const gap = 2;
 
     const cols = Math.floor(
       (pageWidth - margin * 2 + gap) / (badgeWidth + gap),
@@ -195,12 +174,12 @@ export const BadgeEditorCustom: React.FC<BadgeEditorCustomProps> = ({
     items.forEach((item, index) => {
       let dataUrl: string | null = null;
 
-      if (inputMode === 'manual') {
+      if (mode === 'manual') {
         const canvas = document.querySelector('canvas');
-        dataUrl = canvas ? canvas.toDataURL('image/jpeg', 0.7) : null;
+        dataUrl = canvas ? canvas.toDataURL('image/jpeg', 1.0) : null;
       } else {
-        const canvasRef = canvasRefs.current.get(index);
-        dataUrl = canvasRef?.getDataURL('image/jpeg', 0.7) || null;
+        const canvasRefEl = canvasRefs.current.get(index);
+        dataUrl = canvasRefEl?.getDataURL('image/jpeg', 1.0) || null;
       }
 
       if (!dataUrl) return;
@@ -233,69 +212,186 @@ export const BadgeEditorCustom: React.FC<BadgeEditorCustomProps> = ({
         ? `cracha-${items[0].name.replace(/\s+/g, '-').toLowerCase() || 'badge'}.pdf`
         : `crachas-impressao-a4.pdf`;
     pdf.save(fileName);
-    setIsDownloading(false);
+    setIsGenerating(false);
+  };
+
+  const getStepClassName = (step: PointKey) => {
+    if (activePoint === step) return 'border-primary text-primary';
+    if (points[step]) return 'border-green-500 text-green-500';
+    return 'border-border text-muted-foreground';
   };
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-8">
-      <div className="max-w-7xl mx-auto">
-        {!hideHeader && (
-          <header className="mb-8 flex items-center gap-3">
-            <a href="/">
-              <Button
-                variant="ghost"
-                size="icon"
-                title="Voltar"
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </Button>
-            </a>
-            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-primary-foreground">
-              <IdCard />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold">
-                Gerador de Crachás (Custom)
-              </h1>
-              <p className="text-muted-foreground text-sm">
-                Dimensões customizáveis
-              </p>
-            </div>
-          </header>
-        )}
+    <div className="container mx-auto p-4 md:p-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+        <div className="lg:col-span-2 space-y-8">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+              <div className="space-y-1.5">
+                <CardTitle>Editor de Crachá Personalizado</CardTitle>
+                <CardDescription>
+                  Siga os passos para criar seus crachás.
+                </CardDescription>
+              </div>
+              <a href="/">
+                <Button variant="outline" size="sm">
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Voltar ao Padrão
+                </Button>
+              </a>
+            </CardHeader>
+            <CardContent>
+              {!(showPreview && mode === 'bulk') ? (
+                <BadgeCanvas
+                  ref={canvasRef}
+                  image={image}
+                  points={points}
+                  activePoint={activePoint}
+                  onImageUpload={(img) => {
+                    setImage(img);
+                    handleResetPoints();
+                  }}
+                  onPointClick={handlePointClick}
+                  badgeData={badgeData}
+                  showPreview={showPreview && mode === 'manual'}
+                  textColor={textColor}
+                  fontFamily={fontFamily}
+                />
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[700px] overflow-y-auto p-2">
+                  {bulkData.map((data, i) => (
+                    <div
+                      key={i}
+                      className="bg-background border rounded-lg p-2 shadow-sm"
+                    >
+                      <p className="text-[10px] font-mono mb-2 text-muted-foreground">
+                        #{i + 1} - {data.name}
+                      </p>
+                      <BadgeCanvas
+                        ref={(el) => {
+                          if (el) canvasRefs.current.set(i, el);
+                        }}
+                        image={image!}
+                        points={points}
+                        badgeData={data}
+                        showPreview={true}
+                        textColor={textColor}
+                        fontFamily={fontFamily}
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
-        <div className="grid lg:grid-cols-[320px_1fr] gap-6">
-          <aside className="space-y-6">
-            <div className="glass-panel p-5 rounded-2xl border space-y-4">
-              <h2 className="text-sm font-semibold">
-                Dimensões do Crachá (PDF)
-              </h2>
-              <div className="flex gap-4">
-                <div className="space-y-1.5 flex-1">
-                  <label className="text-xs text-muted-foreground">
-                    Largura (mm)
-                  </label>
+          {showPreview && badgeData && mode === 'manual' && (
+            <Card className="animate-in fade-in duration-300">
+              <CardHeader>
+                <CardTitle>Download</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={generateSingleBadge}
+                    className="flex-1"
+                    disabled={isGenerating}
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    {isGenerating ? 'Aguarde...' : 'Baixar PNG'}
+                  </Button>
+                  <Button
+                    onClick={() => exportToPdf([badgeData])}
+                    className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                    disabled={isGenerating}
+                  >
+                    <FileText className="w-4 h-4 mr-2" />
+                    {isGenerating ? 'Aguarde...' : 'Baixar PDF'}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {showPreview && mode === 'bulk' && bulkData.length > 0 && (
+            <Card className="animate-in fade-in duration-300">
+              <CardHeader>
+                <CardTitle>Download em Massa</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={generateBulkZip}
+                    className="flex-1"
+                    disabled={isGenerating}
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    {isGenerating ? 'Gerando...' : 'Baixar ZIP'}
+                  </Button>
+                  <Button
+                    onClick={() => exportToPdf(bulkData)}
+                    className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                    disabled={isGenerating}
+                  >
+                    <FileText className="w-4 h-4 mr-2" />
+                    {isGenerating ? 'Gerando...' : 'PDF (A4)'}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+
+        <div className="space-y-8 lg:sticky lg:top-8">
+          <Card>
+            <CardHeader>
+              <CardTitle>Tamanho Personalizado</CardTitle>
+              <CardDescription>
+                Defina as dimensões do crachá para impressão (em mm).
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Largura (mm)</Label>
                   <Input
                     type="number"
                     value={badgeWidth}
-                    onChange={handleWidthChange}
+                    onChange={(e) => setBadgeWidth(Number(e.target.value))}
+                    min={10}
                   />
                 </div>
-                <div className="space-y-1.5 flex-1">
-                  <label className="text-xs text-muted-foreground">
-                    Altura (mm)
-                  </label>
+                <div className="space-y-2">
+                  <Label>Altura (mm)</Label>
                   <Input
                     type="number"
                     value={badgeHeight}
-                    onChange={handleHeightChange}
+                    onChange={(e) => setBadgeHeight(Number(e.target.value))}
+                    min={10}
                   />
                 </div>
               </div>
-            </div>
+            </CardContent>
+          </Card>
 
-            <div className="glass-panel p-5 rounded-2xl border">
+          <DesignSettings
+            textColor={textColor}
+            onTextColorChange={setTextColor}
+            fontFamily={fontFamily}
+            onFontFamilyChange={setFontFamily}
+            disabled={!image}
+          />
+
+          <Card>
+            <CardHeader>
+              <CardTitle>1. Área de Impressão</CardTitle>
+              <CardDescription>
+                {isReady
+                  ? 'Área definida. Você pode redefinir os pontos se necessário.'
+                  : `Clique na imagem para marcar o ${activePoint ? pointSteps.indexOf(activePoint) + 1 : 1}º canto.`}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
               <PointSelector
                 points={points}
                 activePoint={activePoint}
@@ -304,132 +400,32 @@ export const BadgeEditorCustom: React.FC<BadgeEditorCustomProps> = ({
                 }
                 hasImage={!!image}
               />
-            </div>
-
-            <div className="glass-panel p-5 rounded-2xl border">
-              <DataInput
-                mode={inputMode}
-                onModeChange={(m) => {
-                  setInputMode(m);
-                  setShowPreview(false);
-                }}
-                isReady={allPointsSet}
-                onSingleSubmit={(d) => {
-                  setSingleData(d);
-                  setShowPreview(true);
-                }}
-                onBulkSubmit={(d) => {
-                  setBulkData(d);
-                  setShowPreview(true);
-                }}
-              />
-            </div>
-
-            {showPreview && (
-              <div className="space-y-2">
-                {inputMode === 'manual' ? (
-                  <div className="flex gap-2">
-                    <Button
-                      className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-                      onClick={handleDownloadSingle}
-                      disabled={isDownloading}
-                    >
-                      <Image className="w-4 h-4 mr-2" />
-                      {isDownloading ? 'Aguarde...' : 'Baixar PNG'}
-                    </Button>
-                    <Button
-                      className="flex-1 bg-red-600 hover:bg-red-700 text-white"
-                      onClick={() => exportToPdf([singleData!])}
-                      disabled={isDownloading}
-                    >
-                      <FileText className="w-4 h-4 mr-2" />
-                      {isDownloading ? 'Aguarde...' : 'Baixar PDF'}
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="flex gap-2">
-                    <Button
-                      className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-                      onClick={handleDownloadBulk}
-                      disabled={isDownloading}
-                    >
-                      <Download className="w-4 h-4 mr-2" />
-                      {isDownloading ? 'Gerando...' : 'Baixar ZIP'}
-                    </Button>
-                    <Button
-                      className="flex-1 bg-red-600 hover:bg-red-700 text-white"
-                      onClick={() => exportToPdf(bulkData)}
-                      disabled={isDownloading}
-                    >
-                      <FileText className="w-4 h-4 mr-2" />
-                      {isDownloading ? 'Gerando...' : 'PDF (A4)'}
-                    </Button>
-                  </div>
-                )}
-
-                <Button
-                  variant="ghost"
-                  className="w-full"
-                  onClick={() => setShowPreview(false)}
-                  disabled={isDownloading}
-                >
-                  <RotateCcw className="w-4 h-4 mr-2" /> Editar Dados
-                </Button>
-              </div>
-            )}
-
-            {image && (
               <Button
-                variant="link"
-                className="w-full text-destructive text-xs"
-                onClick={handleFullReset}
+                onClick={handleResetPoints}
+                variant="outline"
+                className="w-full mt-4"
               >
-                Remover Imagem e Resetar tudo
+                Redefinir Pontos
               </Button>
-            )}
-          </aside>
+            </CardContent>
+          </Card>
 
-          <main className="glass-panel p-5 rounded-2xl border min-h-[500px] bg-secondary/10">
-            {!(showPreview && inputMode === 'bulk') ? (
-              <BadgeCanvas
-                image={image}
-                points={points}
-                activePoint={activePoint}
-                onImageUpload={setImage}
-                onPointClick={handlePointClick}
-                badgeData={singleData}
-                showPreview={showPreview && inputMode === 'manual'}
+          <Card>
+            <CardHeader>
+              <CardTitle>2. Dados do Crachá</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <DataInput
+                mode={mode}
+                onModeChange={setMode}
+                onSingleSubmit={handleSingleSubmit}
+                onBulkSubmit={handleBulkSubmit}
+                isReady={isReady}
               />
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[700px] overflow-y-auto p-2">
-                {bulkData.map((data, i) => (
-                  <div
-                    key={i}
-                    className="bg-background border rounded-lg p-2 shadow-sm"
-                  >
-                    <p className="text-[10px] font-mono mb-2 text-muted-foreground">
-                      #{i + 1} - {data.name}
-                    </p>
-                    <BadgeCanvas
-                      ref={(el) => {
-                        if (el) canvasRefs.current.set(i, el);
-                      }}
-                      image={image!}
-                      points={points}
-                      badgeData={data}
-                      showPreview={true}
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
-          </main>
+            </CardContent>
+          </Card>
         </div>
-
-        <footer className="mt-8 text-center text-sm text-muted-foreground">
-          <p>Arraste e solte uma imagem ou clique para fazer upload</p>
-        </footer>
       </div>
     </div>
   );
-};
+}

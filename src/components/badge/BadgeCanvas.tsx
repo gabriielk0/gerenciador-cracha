@@ -16,10 +16,26 @@ interface BadgeCanvasProps {
   onPointClick?: (x: number, y: number) => void;
   badgeData?: BadgeData | null;
   showPreview?: boolean;
+  textColor?: string;
+  fontFamily?: string;
 }
 
 export interface BadgeCanvasRef {
   getDataURL: (type?: string, quality?: number) => string | null;
+}
+
+/**
+ * Converte uma cor hexadecimal para o formato RGBA com uma opacidade específica.
+ * @param hex A cor no formato hexadecimal (ex: '#FFFFFF').
+ * @param opacity A opacidade desejada, de 0 a 1.
+ * @returns A cor no formato string 'rgba(...)'.
+ */
+function hexToRgba(hex: string, opacity: number): string {
+  const bigint = parseInt(hex.slice(1), 16);
+  const r = (bigint >> 16) & 255;
+  const g = (bigint >> 8) & 255;
+  const b = bigint & 255;
+  return `rgba(${r}, ${g}, ${b}, ${opacity})`;
 }
 
 const pointColors: Record<PointKey, string> = {
@@ -46,6 +62,8 @@ export const BadgeCanvas = forwardRef<BadgeCanvasRef, BadgeCanvasProps>(
       onPointClick,
       badgeData = null,
       showPreview = false,
+      textColor = '#000000',
+      fontFamily = 'Inter, sans-serif',
     },
     ref,
   ) => {
@@ -156,13 +174,13 @@ export const BadgeCanvas = forwardRef<BadgeCanvasRef, BadgeCanvasProps>(
             minSize: number = 12,
           ) => {
             let fontSize = startSize;
-            ctx.font = `bold ${fontSize}px Inter, sans-serif`;
+            ctx.font = `bold ${fontSize}px ${fontFamily}`;
             while (
               ctx.measureText(text).width > maxWidth &&
               fontSize > minSize
             ) {
               fontSize -= 1;
-              ctx.font = `bold ${fontSize}px Inter, sans-serif`;
+              ctx.font = `bold ${fontSize}px ${fontFamily}`;
             }
             return fontSize;
           };
@@ -181,8 +199,8 @@ export const BadgeCanvas = forwardRef<BadgeCanvasRef, BadgeCanvasProps>(
           // Lógica para desenhar o texto dependendo de ter Equipe ou não
           const hasTeam = badgeData.team && badgeData.team.trim() !== '';
 
-          ctx.fillStyle = '#ffffff';
-          ctx.font = `bold ${nameFontSize}px Inter, sans-serif`;
+          ctx.fillStyle = textColor;
+          ctx.font = `bold ${nameFontSize}px ${fontFamily}`;
 
           if (hasTeam) {
             // Desenha nome + equipe deslocados para cima e para baixo
@@ -193,8 +211,8 @@ export const BadgeCanvas = forwardRef<BadgeCanvasRef, BadgeCanvasProps>(
 
             ctx.fillText(badgeData.name, centerX, nameY);
 
-            ctx.fillStyle = 'rgba(197, 197, 197, 0.85)';
-            ctx.font = `${teamFontSize}px Inter, sans-serif`;
+            ctx.fillStyle = hexToRgba(textColor, 0.75);
+            ctx.font = `${teamFontSize}px ${fontFamily}`;
             ctx.fillText(badgeData.team, centerX, teamY);
           } else {
             // Se não houver equipe, centraliza o nome no meio exato do quadrado
@@ -203,7 +221,7 @@ export const BadgeCanvas = forwardRef<BadgeCanvasRef, BadgeCanvasProps>(
         }
       };
       img.src = image;
-    }, [image, points, badgeData, showPreview]);
+    }, [image, points, badgeData, showPreview, textColor, fontFamily]);
 
     const getPointPosition = (point: { x: number; y: number } | null) => {
       if (!point || imageSize.width === 0) return null;
