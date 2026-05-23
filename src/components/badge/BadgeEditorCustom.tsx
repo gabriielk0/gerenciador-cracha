@@ -45,8 +45,8 @@ export function BadgeEditorCustom() {
   const [isGenerating, setIsGenerating] = useState(false);
 
   // --- Estados do Tamanho Customizado ---
-  const [badgeWidth, setBadgeWidth] = useState<number>(54);
-  const [badgeHeight, setBadgeHeight] = useState<number>(86);
+  const [badgeWidth, setBadgeWidth] = useState<number>(100);
+  const [badgeHeight, setBadgeHeight] = useState<number>(70);
 
   // --- Novos estados para as configurações de design ---
   const [textColor, setTextColor] = useState('#FFFFFF');
@@ -256,6 +256,7 @@ export function BadgeEditorCustom() {
                   showPreview={showPreview && mode === 'manual'}
                   textColor={textColor}
                   fontFamily={fontFamily}
+                  teamTextOpacity={0.75}
                 />
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[700px] overflow-y-auto p-2">
@@ -277,6 +278,7 @@ export function BadgeEditorCustom() {
                         showPreview={true}
                         textColor={textColor}
                         fontFamily={fontFamily}
+                        teamTextOpacity={0.75}
                       />
                     </div>
                   ))}

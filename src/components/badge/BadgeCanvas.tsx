@@ -18,6 +18,7 @@ interface BadgeCanvasProps {
   showPreview?: boolean;
   textColor?: string;
   fontFamily?: string;
+  teamTextOpacity?: number;
 }
 
 export interface BadgeCanvasRef {
@@ -64,6 +65,7 @@ export const BadgeCanvas = forwardRef<BadgeCanvasRef, BadgeCanvasProps>(
       showPreview = false,
       textColor = '#000000',
       fontFamily = 'Inter, sans-serif',
+      teamTextOpacity = 0.75,
     },
     ref,
   ) => {
@@ -211,7 +213,7 @@ export const BadgeCanvas = forwardRef<BadgeCanvasRef, BadgeCanvasProps>(
 
             ctx.fillText(badgeData.name, centerX, nameY);
 
-            ctx.fillStyle = hexToRgba(textColor, 0.75);
+            ctx.fillStyle = hexToRgba(textColor, teamTextOpacity);
             ctx.font = `${teamFontSize}px ${fontFamily}`;
             ctx.fillText(badgeData.team, centerX, teamY);
           } else {
@@ -221,7 +223,15 @@ export const BadgeCanvas = forwardRef<BadgeCanvasRef, BadgeCanvasProps>(
         }
       };
       img.src = image;
-    }, [image, points, badgeData, showPreview, textColor, fontFamily]);
+    }, [
+      image,
+      points,
+      badgeData,
+      showPreview,
+      textColor,
+      fontFamily,
+      teamTextOpacity,
+    ]);
 
     const getPointPosition = (point: { x: number; y: number } | null) => {
       if (!point || imageSize.width === 0) return null;
