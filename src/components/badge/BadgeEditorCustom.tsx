@@ -16,7 +16,13 @@ import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
-import { Download, FileText, ArrowLeft } from 'lucide-react';
+import {
+  Download,
+  FileText,
+  ArrowLeft,
+  ChevronDown,
+  ChevronUp,
+} from 'lucide-react';
 import { DesignSettings } from './DesignSettings';
 import { jsPDF } from 'jspdf';
 
@@ -52,6 +58,17 @@ export function BadgeEditorCustom() {
   const [textColor, setTextColor] = useState('#FFFFFF');
   const [fontFamily, setFontFamily] = useState('Inter, sans-serif');
   const [teamTextOpacity, setTeamTextOpacity] = useState(0.75);
+
+  // --- Estados para os menus expansíveis ---
+  const [expandedSections, setExpandedSections] = useState({
+    size: false,
+    points: true,
+    data: true,
+  });
+
+  const toggleSection = (section: keyof typeof expandedSections) => {
+    setExpandedSections((prev) => ({ ...prev, [section]: !prev[section] }));
+  };
 
   const isReady = Object.values(points).every((p) => p !== null);
 
@@ -347,34 +364,48 @@ export function BadgeEditorCustom() {
 
         <div className="space-y-8 lg:sticky lg:top-8">
           <Card>
-            <CardHeader>
-              <CardTitle>Tamanho Personalizado</CardTitle>
-              <CardDescription>
-                Defina as dimensões do crachá para impressão (em mm).
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Largura (mm)</Label>
-                  <Input
-                    type="number"
-                    value={badgeWidth}
-                    onChange={(e) => setBadgeWidth(Number(e.target.value))}
-                    min={10}
-                  />
+            <CardHeader
+              className="cursor-pointer hover:bg-secondary/10 transition-colors"
+              onClick={() => toggleSection('size')}
+            >
+              <div className="flex items-center justify-between">
+                <div className="space-y-1.5">
+                  <CardTitle>Tamanho Personalizado</CardTitle>
+                  <CardDescription>
+                    Defina as dimensões do crachá para impressão (em mm).
+                  </CardDescription>
                 </div>
-                <div className="space-y-2">
-                  <Label>Altura (mm)</Label>
-                  <Input
-                    type="number"
-                    value={badgeHeight}
-                    onChange={(e) => setBadgeHeight(Number(e.target.value))}
-                    min={10}
-                  />
-                </div>
+                {expandedSections.size ? (
+                  <ChevronUp className="w-5 h-5 text-muted-foreground shrink-0" />
+                ) : (
+                  <ChevronDown className="w-5 h-5 text-muted-foreground shrink-0" />
+                )}
               </div>
-            </CardContent>
+            </CardHeader>
+            {expandedSections.size && (
+              <CardContent>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Largura (mm)</Label>
+                    <Input
+                      type="number"
+                      value={badgeWidth}
+                      onChange={(e) => setBadgeWidth(Number(e.target.value))}
+                      min={10}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Altura (mm)</Label>
+                    <Input
+                      type="number"
+                      value={badgeHeight}
+                      onChange={(e) => setBadgeHeight(Number(e.target.value))}
+                      min={10}
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            )}
           </Card>
 
           <DesignSettings
@@ -388,46 +419,72 @@ export function BadgeEditorCustom() {
           />
 
           <Card>
-            <CardHeader>
-              <CardTitle>1. Área de Impressão</CardTitle>
-              <CardDescription>
-                {isReady
-                  ? 'Área definida. Você pode redefinir os pontos se necessário.'
-                  : `Clique na imagem para marcar o ${activePoint ? pointSteps.indexOf(activePoint) + 1 : 1}º canto.`}
-              </CardDescription>
+            <CardHeader
+              className="cursor-pointer hover:bg-secondary/10 transition-colors"
+              onClick={() => toggleSection('points')}
+            >
+              <div className="flex items-center justify-between">
+                <div className="space-y-1.5">
+                  <CardTitle>1. Área de Impressão</CardTitle>
+                  <CardDescription>
+                    {isReady
+                      ? 'Área definida. Você pode redefinir os pontos se necessário.'
+                      : `Clique na imagem para marcar o ${activePoint ? pointSteps.indexOf(activePoint) + 1 : 1}º canto.`}
+                  </CardDescription>
+                </div>
+                {expandedSections.points ? (
+                  <ChevronUp className="w-5 h-5 text-muted-foreground shrink-0" />
+                ) : (
+                  <ChevronDown className="w-5 h-5 text-muted-foreground shrink-0" />
+                )}
+              </div>
             </CardHeader>
-            <CardContent>
-              <PointSelector
-                points={points}
-                activePoint={activePoint}
-                onSelectPoint={(k) =>
-                  setActivePoint(activePoint === k ? null : k)
-                }
-                hasImage={!!image}
-              />
-              <Button
-                onClick={handleResetPoints}
-                variant="outline"
-                className="w-full mt-4"
-              >
-                Redefinir Pontos
-              </Button>
-            </CardContent>
+            {expandedSections.points && (
+              <CardContent>
+                <PointSelector
+                  points={points}
+                  activePoint={activePoint}
+                  onSelectPoint={(k) =>
+                    setActivePoint(activePoint === k ? null : k)
+                  }
+                  hasImage={!!image}
+                />
+                <Button
+                  onClick={handleResetPoints}
+                  variant="outline"
+                  className="w-full mt-4"
+                >
+                  Redefinir Pontos
+                </Button>
+              </CardContent>
+            )}
           </Card>
 
           <Card>
-            <CardHeader>
-              <CardTitle>2. Dados do Crachá</CardTitle>
+            <CardHeader
+              className="cursor-pointer hover:bg-secondary/10 transition-colors"
+              onClick={() => toggleSection('data')}
+            >
+              <div className="flex items-center justify-between">
+                <CardTitle>2. Dados do Crachá</CardTitle>
+                {expandedSections.data ? (
+                  <ChevronUp className="w-5 h-5 text-muted-foreground shrink-0" />
+                ) : (
+                  <ChevronDown className="w-5 h-5 text-muted-foreground shrink-0" />
+                )}
+              </div>
             </CardHeader>
-            <CardContent>
-              <DataInput
-                mode={mode}
-                onModeChange={setMode}
-                onSingleSubmit={handleSingleSubmit}
-                onBulkSubmit={handleBulkSubmit}
-                isReady={isReady}
-              />
-            </CardContent>
+            {expandedSections.data && (
+              <CardContent>
+                <DataInput
+                  mode={mode}
+                  onModeChange={setMode}
+                  onSingleSubmit={handleSingleSubmit}
+                  onBulkSubmit={handleBulkSubmit}
+                  isReady={isReady}
+                />
+              </CardContent>
+            )}
           </Card>
         </div>
       </div>

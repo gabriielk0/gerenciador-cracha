@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import {
@@ -7,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Paintbrush } from 'lucide-react';
+import { Paintbrush, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface DesignSettingsProps {
   textColor: string;
@@ -49,81 +50,102 @@ export function DesignSettings({
   onTeamTextOpacityChange,
   disabled = false,
 }: DesignSettingsProps) {
+  const [isOpen, setIsOpen] = useState(false);
+
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Paintbrush className="w-5 h-5" />
-          Configurações de Design
-        </CardTitle>
+      <CardHeader
+        className="cursor-pointer hover:bg-secondary/10 transition-colors"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <Paintbrush className="w-5 h-5" />
+            Configurações de Design
+          </CardTitle>
+          {isOpen ? (
+            <ChevronUp className="w-5 h-5 text-muted-foreground shrink-0" />
+          ) : (
+            <ChevronDown className="w-5 h-5 text-muted-foreground shrink-0" />
+          )}
+        </div>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="text-color">Cor do texto</Label>
-          <div className="relative">
-            <input
-              id="text-color"
-              type="color"
-              value={textColor}
-              onChange={(e) => onTextColorChange(e.target.value)}
-              disabled={disabled}
-              className="absolute w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
-            />
-            <div
-              className="w-full h-10 rounded-md border flex items-center px-3"
-              style={{ backgroundColor: textColor }}
-            >
-              <span
-                className="text-sm font-mono"
-                style={{
-                  color: isColorDark(textColor) ? 'white' : 'black',
-                }}
+      {isOpen && (
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="text-color">Cor do texto</Label>
+            <div className="relative">
+              <input
+                id="text-color"
+                type="color"
+                value={textColor}
+                onChange={(e) => onTextColorChange(e.target.value)}
+                disabled={disabled}
+                className="absolute w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
+              />
+              <div
+                className="w-full h-10 rounded-md border flex items-center px-3"
+                style={{ backgroundColor: textColor }}
               >
-                {textColor.toUpperCase()}
-              </span>
+                <span
+                  className="text-sm font-mono"
+                  style={{
+                    color: isColorDark(textColor) ? 'white' : 'black',
+                  }}
+                >
+                  {textColor.toUpperCase()}
+                </span>
+              </div>
             </div>
           </div>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="font-family">Fonte</Label>
-          <Select
-            value={fontFamily}
-            onValueChange={onFontFamilyChange}
-            disabled={disabled}
-          >
-            <SelectTrigger id="font-family">
-              <SelectValue placeholder="Selecione uma fonte" />
-            </SelectTrigger>
-            <SelectContent>
-              {fontOptions.map((font) => (
-                <SelectItem key={font.value} value={font.value}>
-                  <span style={{ fontFamily: font.value }}>{font.label}</span>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {teamTextOpacity !== undefined && onTeamTextOpacityChange && (
-          <div className="space-y-2 pt-2">
-            <Label htmlFor="team-opacity" className="flex items-center justify-between">
-              <span>Opacidade da Equipe</span>
-              <span className="text-muted-foreground">{Math.round(teamTextOpacity * 100)}%</span>
-            </Label>
-            <input
-              id="team-opacity"
-              type="range"
-              min="0"
-              max="1"
-              step="0.05"
-              value={teamTextOpacity}
-              onChange={(e) => onTeamTextOpacityChange(parseFloat(e.target.value))}
+          <div className="space-y-2">
+            <Label htmlFor="font-family">Fonte</Label>
+            <Select
+              value={fontFamily}
+              onValueChange={onFontFamilyChange}
               disabled={disabled}
-              className="w-full accent-primary cursor-pointer disabled:cursor-not-allowed"
-            />
+            >
+              <SelectTrigger id="font-family">
+                <SelectValue placeholder="Selecione uma fonte" />
+              </SelectTrigger>
+              <SelectContent>
+                {fontOptions.map((font) => (
+                  <SelectItem key={font.value} value={font.value}>
+                    <span style={{ fontFamily: font.value }}>{font.label}</span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-        )}
-      </CardContent>
+
+          {teamTextOpacity !== undefined && onTeamTextOpacityChange && (
+            <div className="space-y-2 pt-2">
+              <Label
+                htmlFor="team-opacity"
+                className="flex items-center justify-between"
+              >
+                <span>Opacidade da Equipe</span>
+                <span className="text-muted-foreground">
+                  {Math.round(teamTextOpacity * 100)}%
+                </span>
+              </Label>
+              <input
+                id="team-opacity"
+                type="range"
+                min="0"
+                max="1"
+                step="0.05"
+                value={teamTextOpacity}
+                onChange={(e) =>
+                  onTeamTextOpacityChange(parseFloat(e.target.value))
+                }
+                disabled={disabled}
+                className="w-full accent-primary cursor-pointer disabled:cursor-not-allowed"
+              />
+            </div>
+          )}
+        </CardContent>
+      )}
     </Card>
   );
 }
