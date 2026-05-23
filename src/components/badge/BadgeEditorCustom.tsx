@@ -51,6 +51,7 @@ export function BadgeEditorCustom() {
   // --- Novos estados para as configurações de design ---
   const [textColor, setTextColor] = useState('#FFFFFF');
   const [fontFamily, setFontFamily] = useState('Inter, sans-serif');
+  const [teamTextOpacity, setTeamTextOpacity] = useState(0.75);
 
   const isReady = Object.values(points).every((p) => p !== null);
 
@@ -256,7 +257,7 @@ export function BadgeEditorCustom() {
                   showPreview={showPreview && mode === 'manual'}
                   textColor={textColor}
                   fontFamily={fontFamily}
-                  teamTextOpacity={0.75}
+                  teamTextOpacity={teamTextOpacity}
                 />
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[700px] overflow-y-auto p-2">
@@ -278,7 +279,7 @@ export function BadgeEditorCustom() {
                         showPreview={true}
                         textColor={textColor}
                         fontFamily={fontFamily}
-                        teamTextOpacity={0.75}
+                        teamTextOpacity={teamTextOpacity}
                       />
                     </div>
                   ))}
@@ -381,6 +382,8 @@ export function BadgeEditorCustom() {
             onTextColorChange={setTextColor}
             fontFamily={fontFamily}
             onFontFamilyChange={setFontFamily}
+            teamTextOpacity={teamTextOpacity}
+            onTeamTextOpacityChange={setTeamTextOpacity}
             disabled={!image}
           />
 

@@ -26,16 +26,34 @@ export interface BadgeCanvasRef {
 }
 
 /**
- * Converte uma cor hexadecimal para o formato RGBA com uma opacidade específica.
- * @param hex A cor no formato hexadecimal (ex: '#FFFFFF').
+ * Clareia uma cor hexadecimal misturando-a com branco e aplica opacidade.
+ * @param hex A cor no formato hexadecimal (ex: '#000000').
+ * @param lightenFactor O fator de clareamento (ex: 0.4 para 40% mais claro).
  * @param opacity A opacidade desejada, de 0 a 1.
- * @returns A cor no formato string 'rgba(...)'.
+ * @returns A cor clareada no formato string 'rgba(...)'.
  */
-function hexToRgba(hex: string, opacity: number): string {
-  const bigint = parseInt(hex.slice(1), 16);
-  const r = (bigint >> 16) & 255;
-  const g = (bigint >> 8) & 255;
-  const b = bigint & 255;
+function lightenColor(
+  hex: string,
+  lightenFactor: number,
+  opacity: number,
+): string {
+  let hexColor = hex.replace('#', '');
+  if (hexColor.length === 3) {
+    hexColor = hexColor
+      .split('')
+      .map((c) => c + c)
+      .join('');
+  }
+
+  const bigint = parseInt(hexColor, 16);
+  let r = (bigint >> 16) & 255;
+  let g = (bigint >> 8) & 255;
+  let b = bigint & 255;
+
+  r = Math.min(255, Math.round(r + (255 - r) * lightenFactor));
+  g = Math.min(255, Math.round(g + (255 - g) * lightenFactor));
+  b = Math.min(255, Math.round(b + (255 - b) * lightenFactor));
+
   return `rgba(${r}, ${g}, ${b}, ${opacity})`;
 }
 
@@ -213,7 +231,8 @@ export const BadgeCanvas = forwardRef<BadgeCanvasRef, BadgeCanvasProps>(
 
             ctx.fillText(badgeData.name, centerX, nameY);
 
-            ctx.fillStyle = hexToRgba(textColor, teamTextOpacity);
+            // Clareia a cor original em 40% e mantém o uso da opacidade atual
+            ctx.fillStyle = lightenColor(textColor, 0.4, teamTextOpacity);
             ctx.font = `${teamFontSize}px ${fontFamily}`;
             ctx.fillText(badgeData.team, centerX, teamY);
           } else {

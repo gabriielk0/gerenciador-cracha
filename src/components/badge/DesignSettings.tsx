@@ -14,6 +14,8 @@ interface DesignSettingsProps {
   onTextColorChange: (color: string) => void;
   fontFamily: string;
   onFontFamilyChange: (font: string) => void;
+  teamTextOpacity?: number;
+  onTeamTextOpacityChange?: (opacity: number) => void;
   disabled?: boolean;
 }
 
@@ -43,6 +45,8 @@ export function DesignSettings({
   onTextColorChange,
   fontFamily,
   onFontFamilyChange,
+  teamTextOpacity,
+  onTeamTextOpacityChange,
   disabled = false,
 }: DesignSettingsProps) {
   return (
@@ -99,6 +103,26 @@ export function DesignSettings({
             </SelectContent>
           </Select>
         </div>
+
+        {teamTextOpacity !== undefined && onTeamTextOpacityChange && (
+          <div className="space-y-2 pt-2">
+            <Label htmlFor="team-opacity" className="flex items-center justify-between">
+              <span>Opacidade da Equipe</span>
+              <span className="text-muted-foreground">{Math.round(teamTextOpacity * 100)}%</span>
+            </Label>
+            <input
+              id="team-opacity"
+              type="range"
+              min="0"
+              max="1"
+              step="0.05"
+              value={teamTextOpacity}
+              onChange={(e) => onTeamTextOpacityChange(parseFloat(e.target.value))}
+              disabled={disabled}
+              className="w-full accent-primary cursor-pointer disabled:cursor-not-allowed"
+            />
+          </div>
+        )}
       </CardContent>
     </Card>
   );

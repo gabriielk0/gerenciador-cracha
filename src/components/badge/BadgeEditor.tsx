@@ -15,6 +15,14 @@ import { Button } from '@/components/ui/button';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { jsPDF } from 'jspdf';
+import { toast } from '@/components/ui/use-toast';
+
+const pointSteps: PointKey[] = [
+  'topLeft',
+  'topRight',
+  'bottomLeft',
+  'bottomRight',
+];
 
 interface BadgeEditorProps {
   hideHeader?: boolean;
@@ -49,7 +57,17 @@ export const BadgeEditor: React.FC = () => {
       ...prev,
       [activePoint]: { x, y },
     }));
-    setActivePoint(null);
+
+    const currentIndex = pointSteps.indexOf(activePoint);
+    const nextPoint = pointSteps[currentIndex + 1] || null;
+    setActivePoint(nextPoint);
+
+    if (currentIndex === pointSteps.length - 1) {
+      toast({
+        title: 'Pronto!',
+        description: 'Área do crachá definida. Agora insira os dados.',
+      });
+    }
   };
 
   const handleSelectPoint = (key: PointKey) => {
@@ -92,6 +110,20 @@ export const BadgeEditor: React.FC = () => {
     setBulkData(data);
     setSingleData(null);
     setShowPreview(true);
+  };
+
+  const handleImageUpload = (img: string) => {
+    setImage(img);
+    setPoints({
+      topLeft: null,
+      topRight: null,
+      bottomLeft: null,
+      bottomRight: null,
+    });
+    setActivePoint('topLeft');
+    setSingleData(null);
+    setBulkData([]);
+    setShowPreview(false);
   };
 
   const handleDownloadSingle = () => {
@@ -347,7 +379,7 @@ export const BadgeEditor: React.FC = () => {
                 image={image}
                 points={points}
                 activePoint={activePoint}
-                onImageUpload={setImage}
+                onImageUpload={handleImageUpload}
                 onPointClick={handlePointClick}
                 badgeData={singleData}
                 showPreview={showPreview && inputMode === 'manual'}
